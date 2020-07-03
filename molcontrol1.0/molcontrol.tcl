@@ -985,7 +985,8 @@ proc ::Molcontrl::textview {} {
 	menubutton $w.all.first.merge.mb -textvariable ::Molcontrl::selection -width 60 -bg white
 	set m [menu $w.all.first.merge.mb.menu -tearoff 0]
 	$w.all.first.merge.mb configure -menu $m
-	$m add radiobutton -value "Selection" -variable ::Molcontrl::selection -label "Selection"
+	$m add radiobutton -value "Res_Count" -variable ::Molcontrl::selection -label "Res_Count"
+	$m add radiobutton -value "Selected Atoms" -variable ::Molcontrl::selection -label "Selected Atoms"
 	$m add radiobutton -value "Selected File/Molecular" -variable ::Molcontrl::selection -label "Selected File/Molecular"
 	$m add radiobutton -value "Merged All Listed Files" -variable ::Molcontrl::selection -label "Merged All Listed Files"
 
@@ -3956,6 +3957,32 @@ proc ::Molcontrl::selectall {} {
         $sel delete
         label textsize 1.2
 }
+#res_count
+proc ::Molcontrl::res_count {} {
+	variable residue_count
+
+	set res_len [llength $residue_count]
+	if {$res_len==0} {
+		set msg "You need to select a molecule"
+		tk_messageBox -title "Empty List" -parent .textview -type ok -message $msg
+		return
+        }
+
+	set filename [tk_getSaveFile -filetypes  {{{Text Files} {.txt}} {All *}}]
+	set filelength [llength $filename]
+	if {$filelength==0} {
+		return
+	}
+	set f [open $filename w]
+
+	foreach val $residue_count {
+		set val_res [lindex $val 0]
+		set val_num [lindex $val 1]
+		set single_info [format "%s\t%s" $val_res $val_num]
+		puts $f $single_info
+	}
+	close $f
+}
 #judge
 proc ::Molcontrl::judge {} {
 	variable selection
@@ -3964,8 +3991,11 @@ proc ::Molcontrl::judge {} {
         if {$all_mol==0} {
                 return
         }
+	if {$selection=="Res_Count"} {
+		::Molcontrl::res_count
+	}
 
-	if {$selection=="Selection"} {
+	if {$selection=="Selected Atoms"} {
 		::Molcontrl::part
 	}
 
@@ -4014,6 +4044,10 @@ proc ::Molcontrl::part {} {
 		set id [lindex $molid $select_id]
 		set sel [atomselect $id $cmd]
 		set filename [::Molcontrl::savefile]
+		set filelength [llength $filename]
+        	if {$filelength==0} {
+                	return
+        	}
 		$sel writepdb $filename
 	}
 	
@@ -4021,6 +4055,10 @@ proc ::Molcontrl::part {} {
 		set id [lindex $molid $select_id]
 		set sel [atomselect $id $cmd]
 		set filename [::Molcontrl::savefile]
+		set filelength [llength $filename]
+        	if {$filelength==0} {
+                	return
+        	}
 		$sel writepdb $filename
 	}
 
@@ -4028,6 +4066,10 @@ proc ::Molcontrl::part {} {
 		set id [lindex $molid $select_id]
 		set sel [atomselect $id $cmd]
 		set filename [::Molcontrl::savefile]
+		set filelength [llength $filename]
+        	if {$filelength==0} {
+                	return
+	        }
 		$sel writepdb $filename
 	}
 	set f_end [open $filename a]
