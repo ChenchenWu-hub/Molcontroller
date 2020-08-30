@@ -99,6 +99,7 @@ namespace eval ::Molcontrl:: {
 
 	variable resid_residue_list {}
 	variable chain_id
+	set chain_id 0
 	variable residue_atom {}
 	variable residue_count {}
 
@@ -151,6 +152,30 @@ namespace eval ::Molcontrl:: {
 	variable select_files {}
 	variable is_top
 	set is_top 1
+
+	variable index_out
+	set index_out 0
+
+	variable x_min
+	variable y_min
+	variable z_min
+	variable x_max
+	variable y_max
+	variable z_max
+
+	variable all_atom_number
+
+	variable size_x
+	variable size_y
+	variable size_z
+	set size_x 0
+	set size_y 0
+	set size_z 0
+	
+	variable turnon_logfile
+	set turnon_logfile 0
+
+	global vmd_logfile_channel
 }
 proc ::Molcontrl::textview {} {
 	variable w
@@ -240,95 +265,114 @@ proc ::Molcontrl::textview {} {
 	grid $w.all.first.fra.add_ref_pbc.file_ref.add $w.all.first.fra.add_ref_pbc.file_ref.refresh -sticky news
 
 	#PBC
-	labelframe $w.all.first.fra.add_ref_pbc.pbc_cry -relief ridge
-        labelframe $w.all.first.fra.add_ref_pbc.pbc_cry.pbc -text "Unit cell" -relief ridge -bd 2
-        label $w.all.first.fra.add_ref_pbc.pbc_cry.pbc.turn -text "box"
-        radiobutton $w.all.first.fra.add_ref_pbc.pbc_cry.pbc.turnon -text on -variable ::Molcontrl::turn -value 1
-        radiobutton $w.all.first.fra.add_ref_pbc.pbc_cry.pbc.turnoff -text off -variable ::Molcontrl::turn -value 0
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.pbc.turn $w.all.first.fra.add_ref_pbc.pbc_cry.pbc.turnon  $w.all.first.fra.add_ref_pbc.pbc_cry.pbc.turnoff -padx 1m -pady 2m -sticky w
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry -relief ridge
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile
+	labelframe $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell
+        labelframe $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.pbc -text "Unit cell" -relief ridge -bd 2
+        label $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.pbc.turn -text "box"
+        radiobutton $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.pbc.turnon -text on -variable ::Molcontrl::turn -value 1
+        radiobutton $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.pbc.turnoff -text off -variable ::Molcontrl::turn -value 0
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.pbc.turn $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.pbc.turnon  $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.pbc.turnoff -padx 1m -pady 2m -sticky w
 
-	bind $w.all.first.fra.add_ref_pbc.pbc_cry.pbc.turnon <Button-1> {
+	bind $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.pbc.turnon <Button-1> {
                 ::Molcontrl::turnon
         }
-        bind $w.all.first.fra.add_ref_pbc.pbc_cry.pbc.turnoff <Button-1> {
+        bind $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.pbc.turnoff <Button-1> {
                 ::Molcontrl::turnoff
         }
 
 	#cryst1
-	labelframe $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1 -text "Cryst1" -relief ridge -bd 2
-	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha
+	labelframe $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1 -text "Cryst1" -relief ridge -bd 2
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha
 
-	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.a_spin
-	label $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.a_spin.a  -text "a:"
-	spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.a_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_a -from 0 -to 100000 -increment 1 -state normal -command {::Molcontrl::pbcset}
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.a_spin.a $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.a_spin.spin
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.a_spin
+	label $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.a_spin.a  -text "a:"
+	spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.a_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_a -from 0 -to 100000 -increment 1 -state normal -command {::Molcontrl::pbcset}
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.a_spin.a $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.a_spin.spin
 
-	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.alpha_spin	
-	label $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.alpha_spin.alpha  -text "alpha:"
-        spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.alpha_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_alpha -from 0 -to 180 -increment 1 -state normal -command {::Molcontrl::pbcset}
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.alpha_spin
+	label $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.alpha_spin.alpha  -text "alpha:"
+        spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.alpha_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_alpha -from 0 -to 180 -increment 1 -state normal -command {::Molcontrl::pbcset}
 
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.alpha_spin.alpha $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.alpha_spin.spin 
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.a_spin -sticky e
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.alpha_spin -sticky e
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.alpha_spin.alpha $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.alpha_spin.spin 
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.a_spin -sticky e
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.alpha_spin -sticky e
 	
-	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta
 
-	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.b_spin
-	label $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.b_spin.b  -text "b:"
-        spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.b_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_b -from 0 -to 100000 -increment 1 -state normal -command {::Molcontrl::pbcset}
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.b_spin.b $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.b_spin.spin
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.b_spin
+	label $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.b_spin.b  -text "b:"
+        spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.b_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_b -from 0 -to 100000 -increment 1 -state normal -command {::Molcontrl::pbcset}
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.b_spin.b $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.b_spin.spin
 
-	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.beta_spin
-	label $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.beta_spin.beta  -text " beta:"
-        spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.beta_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_beta -from 0 -to 180 -increment 1 -state normal -command {::Molcontrl::pbcset}
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.beta_spin.beta $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.beta_spin.spin
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.b_spin -sticky e
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.beta_spin -sticky e
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.beta_spin
+	label $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.beta_spin.beta  -text " beta:"
+        spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.beta_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_beta -from 0 -to 180 -increment 1 -state normal -command {::Molcontrl::pbcset}
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.beta_spin.beta $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.beta_spin.spin
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.b_spin -sticky e
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.beta_spin -sticky e
 	
-	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma
 	
-	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.c_spin
-	label $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.c_spin.c  -text "c:"
-        spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.c_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_c -from 0 -to 100000 -increment 1 -state normal -command {::Molcontrl::pbcset}
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.c_spin.c $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.c_spin.spin
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.c_spin
+	label $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.c_spin.c  -text "c:"
+        spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.c_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_c -from 0 -to 100000 -increment 1 -state normal -command {::Molcontrl::pbcset}
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.c_spin.c $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.c_spin.spin
 	
-	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.gamma_spin
-	label $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.gamma_spin.gamma  -text "gamma:"
-        spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.gamma_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_gamma -from 0 -to 180 -increment 1 -state normal -command {::Molcontrl::pbcset}
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.gamma_spin.gamma $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.gamma_spin.spin
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.c_spin -sticky e
-	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.gamma_spin -sticky e
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.gamma_spin
+	label $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.gamma_spin.gamma  -text "gamma:"
+        spinbox $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.gamma_spin.spin -width 6 -relief sunken -bd 2 -textvariable ::Molcontrl::crystal_size_gamma -from 0 -to 180 -increment 1 -state normal -command {::Molcontrl::pbcset}
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.gamma_spin.gamma $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.gamma_spin.spin
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.c_spin -sticky e
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.gamma_spin -sticky e
 
-	pack $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma -fill x -side left
+	pack $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma -fill x -side left
 
-	bind $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.a_spin.spin <Return> {
+	bind $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.a_spin.spin <Return> {
 		::Molcontrl::pbcset
 	}
 
-	bind $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.a_alpha.alpha_spin.spin <Return> {
+	bind $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.a_alpha.alpha_spin.spin <Return> {
                 ::Molcontrl::pbcset
         }
 	
-	bind $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.b_spin.spin  <Return> {
+	bind $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.b_spin.spin  <Return> {
                 ::Molcontrl::pbcset
         }
 
-	bind $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.b_beta.beta_spin.spin <Return> {
+	bind $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.b_beta.beta_spin.spin <Return> {
                 ::Molcontrl::pbcset
         }
 
-        bind $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.c_spin.spin <Return> {
+        bind $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.c_spin.spin <Return> {
                 ::Molcontrl::pbcset
         }
 
-        bind $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1.c_gamma.gamma_spin.spin <Return> {
+        bind $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1.c_gamma.gamma_spin.spin <Return> {
                 ::Molcontrl::pbcset
         }	
 
-	pack $w.all.first.fra.add_ref_pbc.pbc_cry.pbc -side top -fill x
-	pack $w.all.first.fra.add_ref_pbc.pbc_cry.cryst1 -fill x
+	pack $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.pbc -side top -fill x
+	pack $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell.cryst1 -fill x
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile.cell
 
-	grid $w.all.first.fra.add_ref_pbc.file_ref $w.all.first.fra.add_ref_pbc.pbc_cry -padx 15m -sticky news
+#	pack $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile
+
+	frame $w.all.first.fra.add_ref_pbc.pbc_cry.logfile
+	label $w.all.first.fra.add_ref_pbc.pbc_cry.logfile.empty_top -height 0
+	labelframe $w.all.first.fra.add_ref_pbc.pbc_cry.logfile.name -text "Logging" -relief ridge -bd 2
+	radiobutton $w.all.first.fra.add_ref_pbc.pbc_cry.logfile.name.file_on -text on -variable ::Molcontrl::turnon_logfile -value 1 -command {::Molcontrl::logfile_turnon}
+	radiobutton $w.all.first.fra.add_ref_pbc.pbc_cry.logfile.name.file_off -text off -variable ::Molcontrl::turnon_logfile -value 0 -command {::Molcontrl::logfile_turnoff}
+
+	grid $w.all.first.fra.add_ref_pbc.pbc_cry.logfile.name.file_on $w.all.first.fra.add_ref_pbc.pbc_cry.logfile.name.file_off -padx 1m -pady 2m -sticky w
+
+	label $w.all.first.fra.add_ref_pbc.pbc_cry.logfile.empty_bottom -height 6
+	pack $w.all.first.fra.add_ref_pbc.pbc_cry.logfile.empty_top $w.all.first.fra.add_ref_pbc.pbc_cry.logfile.name $w.all.first.fra.add_ref_pbc.pbc_cry.logfile.empty_bottom -side top -fill y
+
+	pack  $w.all.first.fra.add_ref_pbc.pbc_cry.cell_logfile $w.all.first.fra.add_ref_pbc.pbc_cry.logfile -fill x -side left -padx 6m
+
+#	grid $w.all.first.fra.add_ref_pbc.file_ref $w.all.first.fra.add_ref_pbc.pbc_cry -padx 15m -sticky news
+	pack $w.all.first.fra.add_ref_pbc.file_ref $w.all.first.fra.add_ref_pbc.pbc_cry -padx 6m -fill both -side left
 
 	pack $w.all.first.fra -fill x
 
@@ -374,117 +418,124 @@ proc ::Molcontrl::textview {} {
 	labelframe $w.all.first.structure -text "Property" -relief ridge -bd 2 -padx 5 -pady 4
 	frame $w.all.first.structure.all
 	#chain
-	frame $w.all.first.structure.all.chain
-	pack $w.all.first.structure.all.chain
+	labelframe $w.all.first.structure.all.chain_residue_atom -borderwidth 5
+	frame $w.all.first.structure.all.chain_residue_atom.chain
+	pack $w.all.first.structure.all.chain_residue_atom.chain
 
-	label $w.all.first.structure.all.chain.chain -text "Chain"
+	label $w.all.first.structure.all.chain_residue_atom.chain.chain -text "Chain"
 #	bind $w.all.first.structure.all.chain.chain <Button-1> {
 #		incr ::Molcontrl::chain_select
 #		::Molcontrl::selectall
 #	}
 	
-	frame $w.all.first.structure.all.chain.chain_list
-	scrollbar $w.all.first.structure.all.chain.chain_list.scrolly -command ".textview.all.first.structure.all.chain.chain_list.box yview"
-	scrollbar $w.all.first.structure.all.chain.chain_list.scrollx -command ".textview.all.first.structure.all.chain.chain_list.box xview" -orient horizontal
-        listbox $w.all.first.structure.all.chain.chain_list.box -listvariable ::Molcontrl::chain -xscroll "$w.all.first.structure.all.chain.chain_list.scrollx set" -yscroll "$w.all.first.structure.all.chain.chain_list.scrolly set" -activestyle dotbox -width 12 -height 9 -setgrid 1 -selectmode browse
-        grid $w.all.first.structure.all.chain.chain_list.box -column 0 -row 0 -sticky news
-        grid $w.all.first.structure.all.chain.chain_list.scrolly -column 1 -row 0 -sticky ns
-        grid $w.all.first.structure.all.chain.chain_list.scrollx -row 1 -sticky news
+	frame $w.all.first.structure.all.chain_residue_atom.chain.chain_list
+	scrollbar $w.all.first.structure.all.chain_residue_atom.chain.chain_list.scrolly -command ".textview.all.first.structure.all.chain_residue_atom.chain.chain_list.box yview"
+	scrollbar $w.all.first.structure.all.chain_residue_atom.chain.chain_list.scrollx -command ".textview.all.first.structure.all.chain_residue_atom.chain.chain_list.box xview" -orient horizontal
+        listbox $w.all.first.structure.all.chain_residue_atom.chain.chain_list.box -listvariable ::Molcontrl::chain -xscroll "$w.all.first.structure.all.chain_residue_atom.chain.chain_list.scrollx set" -yscroll "$w.all.first.structure.all.chain_residue_atom.chain.chain_list.scrolly set" -activestyle dotbox -width 12 -height 9 -setgrid 1 -selectmode browse
+        grid $w.all.first.structure.all.chain_residue_atom.chain.chain_list.box -column 0 -row 0 -sticky news
+        grid $w.all.first.structure.all.chain_residue_atom.chain.chain_list.scrolly -column 1 -row 0 -sticky ns
+        grid $w.all.first.structure.all.chain_residue_atom.chain.chain_list.scrollx -row 1 -sticky news
 
-	bind $w.all.first.structure.all.chain.chain_list.box <<ListboxSelect>> {
+	bind $w.all.first.structure.all.chain_residue_atom.chain.chain_list.box <<ListboxSelect>> {
                 #only %w
                 ::Molcontrl::resid_residue %W
 		::Molcontrl::show_select_chain %W
         }
 
-	grid $w.all.first.structure.all.chain.chain -sticky news
-	grid $w.all.first.structure.all.chain.chain_list -sticky news
+	grid $w.all.first.structure.all.chain_residue_atom.chain.chain -sticky news
+	grid $w.all.first.structure.all.chain_residue_atom.chain.chain_list -sticky news
 	
 	#resid_residue
-	frame $w.all.first.structure.all.resid
-	label $w.all.first.structure.all.resid.resid -text "Residue"
+	frame $w.all.first.structure.all.chain_residue_atom.resid
+	label $w.all.first.structure.all.chain_residue_atom.resid.resid -text "Residue"
 #	bind $w.all.first.structure.all.resid.resid <Button-1> {
 #		incr ::Molcontrl::resid_select
 #                ::Molcontrl::selectall
 #        }
-	frame $w.all.first.structure.all.resid.resid_list
-	scrollbar $w.all.first.structure.all.resid.resid_list.scrolly -command ".textview.all.first.structure.all.resid.resid_list.box yview"
-	scrollbar $w.all.first.structure.all.resid.resid_list.scrollx -command ".textview.all.first.structure.all.resid.resid_list.box xview" -orient horizontal
-        listbox $w.all.first.structure.all.resid.resid_list.box -listvariable ::Molcontrl::resid_residue_list -xscroll "$w.all.first.structure.all.resid.resid_list.scrollx set" -yscroll "$w.all.first.structure.all.resid.resid_list.scrolly set" -activestyle dotbox -width 12 -height 9 -setgrid 1 -selectmode browse
-        grid $w.all.first.structure.all.resid.resid_list.box -column 0 -row 0 -sticky news
-        grid $w.all.first.structure.all.resid.resid_list.scrolly -column 1 -row 0 -sticky ns
-        grid $w.all.first.structure.all.resid.resid_list.scrollx -row 1 -sticky news
+	frame $w.all.first.structure.all.chain_residue_atom.resid.resid_list
+	scrollbar $w.all.first.structure.all.chain_residue_atom.resid.resid_list.scrolly -command ".textview.all.first.structure.all.chain_residue_atom.resid.resid_list.box yview"
+	scrollbar $w.all.first.structure.all.chain_residue_atom.resid.resid_list.scrollx -command ".textview.all.first.structure.all.chain_residue_atom.resid.resid_list.box xview" -orient horizontal
+        listbox $w.all.first.structure.all.chain_residue_atom.resid.resid_list.box -listvariable ::Molcontrl::resid_residue_list -xscroll "$w.all.first.structure.all.chain_residue_atom.resid.resid_list.scrollx set" -yscroll "$w.all.first.structure.all.chain_residue_atom.resid.resid_list.scrolly set" -activestyle dotbox -width 12 -height 9 -setgrid 1 -selectmode browse
+        grid $w.all.first.structure.all.chain_residue_atom.resid.resid_list.box -column 0 -row 0 -sticky news
+        grid $w.all.first.structure.all.chain_residue_atom.resid.resid_list.scrolly -column 1 -row 0 -sticky ns
+        grid $w.all.first.structure.all.chain_residue_atom.resid.resid_list.scrollx -row 1 -sticky news
 	
-	bind $w.all.first.structure.all.resid.resid_list.box <<ListboxSelect>> {
+	bind $w.all.first.structure.all.chain_residue_atom.resid.resid_list.box <<ListboxSelect>> {
                 ::Molcontrl::get_atom %W
 		::Molcontrl::show_select_residue %W
         }
 
-	grid $w.all.first.structure.all.resid.resid -sticky news
-	grid $w.all.first.structure.all.resid.resid_list -sticky news
+	grid $w.all.first.structure.all.chain_residue_atom.resid.resid -sticky news
+	grid $w.all.first.structure.all.chain_residue_atom.resid.resid_list -sticky news
 	
 	#residue_atom
-	frame $w.all.first.structure.all.residue
-	label $w.all.first.structure.all.residue.residue -text "Atom"
+	frame $w.all.first.structure.all.chain_residue_atom.residue
+	label $w.all.first.structure.all.chain_residue_atom.residue.residue -text "Atom"
 #	bind $w.all.first.structure.all.residue.residue <Button-1> {
 #		incr ::Molcontrl::residue_select
 #		::Molcontrl::selectall
 #        }
 
-	frame $w.all.first.structure.all.residue.residue_list
-	scrollbar $w.all.first.structure.all.residue.residue_list.scrolly -command ".textview.all.first.structure.all.residue.residue_list.box yview"
-	scrollbar $w.all.first.structure.all.residue.residue_list.scrollx -command ".textview.all.first.structure.all.residue.residue_list.box xview" -orient horizontal
-        listbox $w.all.first.structure.all.residue.residue_list.box -listvariable ::Molcontrl::residue_atom -xscroll "$w.all.first.structure.all.residue.residue_list.scrollx set" -yscroll "$w.all.first.structure.all.residue.residue_list.scrolly set" -activestyle dotbox -width 12 -height 9 -setgrid 1 -selectmode browse
-        grid $w.all.first.structure.all.residue.residue_list.box -column 0 -row 0 -sticky news
-        grid $w.all.first.structure.all.residue.residue_list.scrolly -column 1 -row 0 -sticky ns
-        grid $w.all.first.structure.all.residue.residue_list.scrollx -row 1 -sticky news
+	frame $w.all.first.structure.all.chain_residue_atom.residue.residue_list
+	scrollbar $w.all.first.structure.all.chain_residue_atom.residue.residue_list.scrolly -command ".textview.all.first.structure.all.chain_residue_atom.residue.residue_list.box yview"
+	scrollbar $w.all.first.structure.all.chain_residue_atom.residue.residue_list.scrollx -command ".textview.all.first.structure.all.chain_residue_atom.residue.residue_list.box xview" -orient horizontal
+        listbox $w.all.first.structure.all.chain_residue_atom.residue.residue_list.box -listvariable ::Molcontrl::residue_atom -xscroll "$w.all.first.structure.all.chain_residue_atom.residue.residue_list.scrollx set" -yscroll "$w.all.first.structure.all.chain_residue_atom.residue.residue_list.scrolly set" -activestyle dotbox -width 12 -height 9 -setgrid 1 -selectmode browse
+        grid $w.all.first.structure.all.chain_residue_atom.residue.residue_list.box -column 0 -row 0 -sticky news
+        grid $w.all.first.structure.all.chain_residue_atom.residue.residue_list.scrolly -column 1 -row 0 -sticky ns
+        grid $w.all.first.structure.all.chain_residue_atom.residue.residue_list.scrollx -row 1 -sticky news
 
-	bind $w.all.first.structure.all.residue.residue_list.box <<ListboxSelect>> {
+	bind $w.all.first.structure.all.chain_residue_atom.residue.residue_list.box <<ListboxSelect>> {
                 #only %W
                 ::Molcontrl::show_select_residueatom %W
         }
 
-	grid $w.all.first.structure.all.residue.residue -sticky news
-	grid $w.all.first.structure.all.residue.residue_list -sticky news
+	grid $w.all.first.structure.all.chain_residue_atom.residue.residue -sticky news
+	grid $w.all.first.structure.all.chain_residue_atom.residue.residue_list -sticky news
+
+	pack $w.all.first.structure.all.chain_residue_atom.chain $w.all.first.structure.all.chain_residue_atom.resid $w.all.first.structure.all.chain_residue_atom.residue -side left -fill x -padx 1 -expand 1
+
+	labelframe $w.all.first.structure.all.count_location -borderwidth 5
 
 	#res_num
-	frame $w.all.first.structure.all.residuenum
-	label $w.all.first.structure.all.residuenum.residuenum -text "Res_Count" 
+	frame $w.all.first.structure.all.count_location.residuenum
+	label $w.all.first.structure.all.count_location.residuenum.residuenum -text "Res_Count" 
 	
-	frame $w.all.first.structure.all.residuenum.res_num_list
-	scrollbar $w.all.first.structure.all.residuenum.res_num_list.scrolly -command ".textview.all.first.structure.all.residuenum.res_num_list.box yview"
-	scrollbar $w.all.first.structure.all.residuenum.res_num_list.scrollx -command ".textview.all.first.structure.all.residuenum.res_num_list.box xview" -orient horizontal
-        listbox $w.all.first.structure.all.residuenum.res_num_list.box -listvariable ::Molcontrl::residue_count -xscroll "$w.all.first.structure.all.residuenum.res_num_list.scrollx set" -yscroll "$w.all.first.structure.all.residuenum.res_num_list.scrolly set" -activestyle dotbox -width 12 -height 9 -setgrid 1 -selectmode browse
-        grid $w.all.first.structure.all.residuenum.res_num_list.box -row 0 -column 0 -sticky news
-        grid $w.all.first.structure.all.residuenum.res_num_list.scrolly -row 0 -column 1 -sticky ns
-        grid $w.all.first.structure.all.residuenum.res_num_list.scrollx -row 1 -sticky news
+	frame $w.all.first.structure.all.count_location.residuenum.res_num_list
+	scrollbar $w.all.first.structure.all.count_location.residuenum.res_num_list.scrolly -command ".textview.all.first.structure.all.count_location.residuenum.res_num_list.box yview"
+	scrollbar $w.all.first.structure.all.count_location.residuenum.res_num_list.scrollx -command ".textview.all.first.structure.all.count_location.residuenum.res_num_list.box xview" -orient horizontal
+        listbox $w.all.first.structure.all.count_location.residuenum.res_num_list.box -listvariable ::Molcontrl::residue_count -xscroll "$w.all.first.structure.all.count_location.residuenum.res_num_list.scrollx set" -yscroll "$w.all.first.structure.all.count_location.residuenum.res_num_list.scrolly set" -activestyle dotbox -width 12 -height 9 -setgrid 1 -selectmode browse
+        grid $w.all.first.structure.all.count_location.residuenum.res_num_list.box -row 0 -column 0 -sticky news
+        grid $w.all.first.structure.all.count_location.residuenum.res_num_list.scrolly -row 0 -column 1 -sticky ns
+        grid $w.all.first.structure.all.count_location.residuenum.res_num_list.scrollx -row 1 -sticky news
 
-	bind $w.all.first.structure.all.residuenum.res_num_list.box <<ListboxSelect>> {
+	bind $w.all.first.structure.all.count_location.residuenum.res_num_list.box <<ListboxSelect>> {
 		::Molcontrl::get_id %W
 		::Molcontrl::show_select_residueall %W
 	}
 	
-	grid $w.all.first.structure.all.residuenum.residuenum -sticky news
-	grid $w.all.first.structure.all.residuenum.res_num_list -sticky news
+	grid $w.all.first.structure.all.count_location.residuenum.residuenum -sticky news
+	grid $w.all.first.structure.all.count_location.residuenum.res_num_list -sticky news
 
 	#residueid
-	frame $w.all.first.structure.all.residueid
-	label $w.all.first.structure.all.residueid.residueid -text "Res_Location"
+	frame $w.all.first.structure.all.count_location.residueid
+	label $w.all.first.structure.all.count_location.residueid.residueid -text "Res_Location"
 
-	frame $w.all.first.structure.all.residueid.res_id_list
-	scrollbar $w.all.first.structure.all.residueid.res_id_list.scrolly -command ".textview.all.first.structure.all.residueid.res_id_list.box yview"
-	scrollbar $w.all.first.structure.all.residueid.res_id_list.scrollx -command ".textview.all.first.structure.all.residueid.res_id_list.box xview" -orient horizontal
-	listbox $w.all.first.structure.all.residueid.res_id_list.box -listvariable ::Molcontrl::residue_id -xscroll "$w.all.first.structure.all.residueid.res_id_list.scrollx set" -yscroll "$w.all.first.structure.all.residueid.res_id_list.scrolly set" -activestyle dotbox -width 12 -height 9 -setgrid 1 -selectmode browse
-	grid $w.all.first.structure.all.residueid.res_id_list.box -row 0 -column 0 -sticky news
-	grid $w.all.first.structure.all.residueid.res_id_list.scrolly -row 0 -column 1 -sticky ns
-	grid $w.all.first.structure.all.residueid.res_id_list.scrollx -row 1 -sticky news
+	frame $w.all.first.structure.all.count_location.residueid.res_id_list
+	scrollbar $w.all.first.structure.all.count_location.residueid.res_id_list.scrolly -command ".textview.all.first.structure.all.count_location.residueid.res_id_list.box yview"
+	scrollbar $w.all.first.structure.all.count_location.residueid.res_id_list.scrollx -command ".textview.all.first.structure.all.count_location.residueid.res_id_list.box xview" -orient horizontal
+	listbox $w.all.first.structure.all.count_location.residueid.res_id_list.box -listvariable ::Molcontrl::residue_id -xscroll "$w.all.first.structure.all.count_location.residueid.res_id_list.scrollx set" -yscroll "$w.all.first.structure.all.count_location.residueid.res_id_list.scrolly set" -activestyle dotbox -width 12 -height 9 -setgrid 1 -selectmode browse
+	grid $w.all.first.structure.all.count_location.residueid.res_id_list.box -row 0 -column 0 -sticky news
+	grid $w.all.first.structure.all.count_location.residueid.res_id_list.scrolly -row 0 -column 1 -sticky ns
+	grid $w.all.first.structure.all.count_location.residueid.res_id_list.scrollx -row 1 -sticky news
 
-	bind $w.all.first.structure.all.residueid.res_id_list.box <<ListboxSelect>> {
+	bind $w.all.first.structure.all.count_location.residueid.res_id_list.box <<ListboxSelect>> {
 		::Molcontrl::show_select_residueid %W
 	}
 
-	grid $w.all.first.structure.all.residueid.residueid -sticky news
-	grid $w.all.first.structure.all.residueid.res_id_list -sticky news
+	grid $w.all.first.structure.all.count_location.residueid.residueid -sticky news
+	grid $w.all.first.structure.all.count_location.residueid.res_id_list -sticky news
+
+	pack $w.all.first.structure.all.count_location.residuenum $w.all.first.structure.all.count_location.residueid -side left -fill x -padx 1 -expand 1
 
 	#element
 #	frame  $w.all.first.structure.all.element
@@ -608,6 +659,7 @@ proc ::Molcontrl::textview {} {
 	bind $w.all.first.structure.all.highlight.draw.rep.scrollbar.box <<TablelistSelect>> {
 #		::Molcontrl::ref_sty_col_sel_list
 		::Molcontrl::get_highlight_info %W
+		::Molcontrl::minmax
 	}
 
 	bind $w.all.first.structure.all.highlight.draw.rep.scrollbar.box <Button-1> {
@@ -707,7 +759,8 @@ proc ::Molcontrl::textview {} {
 #	grid $w.all.first.structure.highlight.label -sticky w
 	
 
-	pack $w.all.first.structure.all.chain $w.all.first.structure.all.resid $w.all.first.structure.all.residue $w.all.first.structure.all.residuenum $w.all.first.structure.all.residueid $w.all.first.structure.all.highlight -side left -fill x -padx 3 -expand 1
+	pack $w.all.first.structure.all.chain_residue_atom $w.all.first.structure.all.count_location $w.all.first.structure.all.highlight -side left -fill x -padx 5 -expand 1
+#	pack $w.all.first.structure.all.chain $w.all.first.structure.all.resid $w.all.first.structure.all.residue $w.all.first.structure.all.residuenum $w.all.first.structure.all.residueid $w.all.first.structure.all.highlight -side left -fill x -padx 3 -expand 1
 
 	#       geometry        
         frame $w.all.first.structure.geometry
@@ -753,7 +806,64 @@ proc ::Molcontrl::textview {} {
 
         pack $w.all.first.structure.geometry.command $w.all.first.structure.geometry.show_center $w.all.first.structure.geometry.show_weight -expand 1 -side left
 
-	pack $w.all.first.structure.all $w.all.first.structure.geometry -fill y
+	frame $w.all.first.structure.minmax
+
+	labelframe $w.all.first.structure.minmax.x
+	frame $w.all.first.structure.minmax.x.minx
+	label $w.all.first.structure.minmax.x.minx.x_min_info -text "min x:" -width 7
+	label $w.all.first.structure.minmax.x.minx.x_min -textvariable ::Molcontrl::x_min -width 7
+	grid $w.all.first.structure.minmax.x.minx.x_min_info $w.all.first.structure.minmax.x.minx.x_min
+
+	frame $w.all.first.structure.minmax.x.maxx
+        label $w.all.first.structure.minmax.x.maxx.x_max_info -text "max x:" -width 7
+        label $w.all.first.structure.minmax.x.maxx.x_max -textvariable ::Molcontrl::x_max -width 7
+        grid $w.all.first.structure.minmax.x.maxx.x_max_info $w.all.first.structure.minmax.x.maxx.x_max
+
+	frame $w.all.first.structure.minmax.x.sizex
+	label $w.all.first.structure.minmax.x.sizex.size_x_info -text "size x:" -width 7
+	label $w.all.first.structure.minmax.x.sizex.size_x -textvariable ::Molcontrl::size_x -width 7
+	grid $w.all.first.structure.minmax.x.sizex.size_x_info $w.all.first.structure.minmax.x.sizex.size_x
+	
+	grid $w.all.first.structure.minmax.x.minx $w.all.first.structure.minmax.x.maxx $w.all.first.structure.minmax.x.sizex
+
+	labelframe $w.all.first.structure.minmax.y
+	frame $w.all.first.structure.minmax.y.miny
+	label $w.all.first.structure.minmax.y.miny.y_min_info -text "min y:" -width 7
+	label $w.all.first.structure.minmax.y.miny.y_min -textvariable ::Molcontrl::y_min -width 7
+	grid $w.all.first.structure.minmax.y.miny.y_min_info $w.all.first.structure.minmax.y.miny.y_min
+
+	frame $w.all.first.structure.minmax.y.maxy
+        label $w.all.first.structure.minmax.y.maxy.y_max_info -text "max y:" -width 7
+        label $w.all.first.structure.minmax.y.maxy.y_max -textvariable ::Molcontrl::y_max -width 7
+        grid $w.all.first.structure.minmax.y.maxy.y_max_info $w.all.first.structure.minmax.y.maxy.y_max
+
+	frame $w.all.first.structure.minmax.y.sizey
+        label $w.all.first.structure.minmax.y.sizey.size_y_info -text "size y:" -width 7
+        label $w.all.first.structure.minmax.y.sizey.size_y -textvariable ::Molcontrl::size_y -width 7
+        grid $w.all.first.structure.minmax.y.sizey.size_y_info $w.all.first.structure.minmax.y.sizey.size_y
+
+	grid $w.all.first.structure.minmax.y.miny $w.all.first.structure.minmax.y.maxy $w.all.first.structure.minmax.y.sizey
+
+	labelframe $w.all.first.structure.minmax.z
+	frame $w.all.first.structure.minmax.z.minz
+	label $w.all.first.structure.minmax.z.minz.z_min_info -text "min z:" -width 7
+	label $w.all.first.structure.minmax.z.minz.z_min -textvariable ::Molcontrl::z_min -width 7
+	grid $w.all.first.structure.minmax.z.minz.z_min_info $w.all.first.structure.minmax.z.minz.z_min
+
+	frame $w.all.first.structure.minmax.z.maxz
+	label $w.all.first.structure.minmax.z.maxz.z_max_info -text "max z:" -width 7
+	label $w.all.first.structure.minmax.z.maxz.z_max -textvariable ::Molcontrl::z_max -width 7
+	grid $w.all.first.structure.minmax.z.maxz.z_max_info $w.all.first.structure.minmax.z.maxz.z_max
+
+	frame $w.all.first.structure.minmax.z.sizez
+        label $w.all.first.structure.minmax.z.sizez.size_z_info -text "size z:" -width 7
+        label $w.all.first.structure.minmax.z.sizez.size_z -textvariable ::Molcontrl::size_z -width 7
+        grid $w.all.first.structure.minmax.z.sizez.size_z_info $w.all.first.structure.minmax.z.sizez.size_z
+
+	grid $w.all.first.structure.minmax.z.minz $w.all.first.structure.minmax.z.maxz $w.all.first.structure.minmax.z.sizez
+	pack $w.all.first.structure.minmax.x $w.all.first.structure.minmax.y $w.all.first.structure.minmax.z -fill x -side left -padx 3
+
+	pack $w.all.first.structure.all $w.all.first.structure.geometry $w.all.first.structure.minmax -fill y
 	pack $w.all.first.structure -fill x
 
         #moving
@@ -851,6 +961,7 @@ proc ::Molcontrl::textview {} {
         grid $w.all.first.moving.shift.translate.down.pack_x.x $w.all.first.moving.shift.translate.down.pack_x.x_sit $w.all.first.moving.shift.translate.down.pack_x.x_scale
         bind $w.all.first.moving.shift.translate.down.pack_x.x_sit <Return> {
                 ::Molcontrl::move_trans
+		::Molcontrl::reset
         }
 
 	frame $w.all.first.moving.shift.translate.down.pack_y
@@ -860,6 +971,7 @@ proc ::Molcontrl::textview {} {
         grid $w.all.first.moving.shift.translate.down.pack_y.y $w.all.first.moving.shift.translate.down.pack_y.y_sit $w.all.first.moving.shift.translate.down.pack_y.y_scale
         bind $w.all.first.moving.shift.translate.down.pack_y.y_sit <Return> {
                 ::Molcontrl::move_trans
+		::Molcontrl::reset
         }
 
 	frame $w.all.first.moving.shift.translate.down.pack_z
@@ -869,6 +981,7 @@ proc ::Molcontrl::textview {} {
         grid $w.all.first.moving.shift.translate.down.pack_z.z $w.all.first.moving.shift.translate.down.pack_z.z_sit $w.all.first.moving.shift.translate.down.pack_z.z_scale
         bind $w.all.first.moving.shift.translate.down.pack_z.z_sit <Return> {
                 ::Molcontrl::move_trans
+		::Molcontrl::reset
         }
 	pack $w.all.first.moving.shift.translate.down.pack_x $w.all.first.moving.shift.translate.down.pack_y $w.all.first.moving.shift.translate.down.pack_z -fill y -pady 1m -expand 1 -side top
 	pack $w.all.first.moving.shift.translate.up $w.all.first.moving.shift.translate.down -fill y -pady 1m
@@ -1025,6 +1138,16 @@ proc ::Molcontrl::molinformation {} {
 	variable center
 	variable weight
 	variable select_files
+	variable x_min
+	variable y_min
+        variable z_min
+        variable x_max
+        variable y_max
+        variable z_max
+	variable size_x
+	variable size_y
+	variable size_z
+	variable all_atom_number
 
 	variable style_color_sel
 	set style_color_sel {}
@@ -1049,11 +1172,23 @@ proc ::Molcontrl::molinformation {} {
 	set crystal_size_alpha 0
 	set crystal_size_beta 0
 	set crystal_size_gamma 0
+
+	set x_min 0
+	set y_min 0
+	set z_min 0
+	set x_max 0
+	set y_max 0
+	set z_max 0
+
+	set size_x 0
+	set size_y 0
+	set size_z 0
 	
 	set center {}
 	set weight 0
 
 	set select_files {}
+	set all_atom_number {}
 
 	set all_mol [molinfo num]
 	if {$all_mol==0} {
@@ -1081,7 +1216,6 @@ proc ::Molcontrl::molinformation {} {
 		set flag 1
 	}
 
-
 	if {$flag==1} {
 		set molid $update_molid
 		set number 0
@@ -1091,18 +1225,26 @@ proc ::Molcontrl::molinformation {} {
 			set id_info_list [list $id]
 			#file
 			set file_name_all [molinfo $id get filename]
-			set f_length [string length $file_name_all]
-			set f_first [string range $file_name_all 0 1]
-			set f_last [string range $file_name_all $f_length-2 $f_length-1]
-			set f_first_judge [string equal $f_first "{{"]
-			set f_last_judge [string equal $f_last "}}"]
-			if {$f_first_judge==1&&$f_last_judge==1} {
-				set file_name_all_real [string range $file_name_all 2 $f_length-3]
-				lappend thesefile $file_name_all_real
-				set file_name [file tail $file_name_all_real]
-			} else {
-				lappend thesefile $file_name_all
-				set file_name [file tail $file_name_all]
+			foreach single_split_file $file_name_all {
+				foreach single_file_name $single_split_file {
+					set get_file_extension [file extension $single_file_name]
+                                        if {$get_file_extension==".pdb"} {
+                                                lappend thesefile $single_file_name
+                                                set file_name [file tail $single_file_name]
+                                        }
+                                        if {$get_file_extension==".gro"} {
+                                                lappend thesefile $single_file_name
+                                                set file_name [file tail $single_file_name]
+                                        }
+                                        if {$get_file_extension==".mol2"} {
+                                                lappend thesefile $single_file_name
+                                                set file_name [file tail $single_file_name]
+                                        }
+                                        if {$get_file_extension==""} {
+                                                lappend thesefile $single_file_name
+						set file_name [file tail $single_file_name]
+					}
+				}
 			}
 
 			set file_name_info_list [list $file_name]
@@ -1111,6 +1253,7 @@ proc ::Molcontrl::molinformation {} {
 			set atom_num [$sel num]
 
 			set atom_num_info_list [list $atom_num]
+			lappend all_atom_number $atom_num
 	
 			set msg [format "%s   %s   %s" $id_info_list $file_name_info_list $atom_num_info_list]
 			lappend ::Molcontrl::filelist $msg
@@ -1125,26 +1268,35 @@ proc ::Molcontrl::molinformation {} {
 			set id_info_list [list $id]
                         #file
                         set file_name_all [molinfo $id get filename]
-			set f_length [string length $file_name_all]
-                        set f_first [string range $file_name_all 0 1]
-                        set f_last [string range $file_name_all $f_length-2 $f_length-1]
-                        set f_first_judge [string equal $f_first "{{"]
-                        set f_last_judge [string equal $f_last "}}"]
-                        if {$f_first_judge==1&&$f_last_judge==1} {
-                                set file_name_all_real [string range $file_name_all 2 $f_length-3]
-				lappend thesefile $file_name_all_real
-                                set file_name [file tail $file_name_all_real]
-                        } else {
-                        	lappend thesefile $file_name_all
-				set file_name [file tail $file_name_all]
-			}
-
+			foreach single_split_file $file_name_all {
+                                foreach single_file_name $single_split_file {
+                                        set get_file_extension [file extension $single_file_name]
+                                        if {$get_file_extension==".pdb"} {
+                                                lappend thesefile $single_file_name
+                                                set file_name [file tail $single_file_name]
+                                        }
+                                        if {$get_file_extension==".gro"} {
+                                                lappend thesefile $single_file_name
+                                                set file_name [file tail $single_file_name]
+                                        }
+                                        if {$get_file_extension==".mol2"} {
+                                                lappend thesefile $single_file_name
+                                                set file_name [file tail $single_file_name]
+                                        }
+                                        if {$get_file_extension==""} {
+                                                lappend thesefile $single_file_name
+                                                set file_name [file tail $single_file_name]
+                                        }
+                                }
+                        }
+			
 			set file_name_info_list [list $file_name]
                         #atom
                         set sel [atomselect $id all]
                         set atom_num [$sel num] 
 
 			set atom_num_info_list [list $atom_num]
+			lappend all_atom_number $atom_num
 
 			set msg [format "%s   %s   %s" $id_info_list $file_name_info_list $atom_num_info_list]
                         lappend ::Molcontrl::filelist $msg 
@@ -1240,8 +1392,25 @@ proc ::Molcontrl::geometry {W} {
 	variable resid_residue_list
 	variable residue_atom
 	variable residue_count
+	variable residue_id
 	variable style_color_sel_id
 	variable select_files
+
+	variable thesefile
+
+	variable chain_list_select
+	variable residue_list_select
+	variable chain_id
+
+	variable x_min
+	variable y_min
+        variable z_min
+        variable x_max
+        variable y_max
+        variable z_max
+	variable size_x
+	variable size_y
+	variable size_z
 
 	set chain_select 0
 	set resid_select 0
@@ -1249,6 +1418,16 @@ proc ::Molcontrl::geometry {W} {
 	set element_select 0
 	set atom_select 0
 	set charge_select 0
+
+	set x_min 0
+	set y_min 0
+	set z_min 0
+	set x_max 0
+	set y_max 0
+	set z_max 0
+	set size_x 0
+	set size_y 0
+	set size_z 0
 	#empty
 	set residue {}
 	set atom {}
@@ -1269,8 +1448,10 @@ proc ::Molcontrl::geometry {W} {
 	set single_residue_all {}
 	set resid_residue_list {}
 	set residue_atom {}
+	set residue_id {}
 
 	set style_color_sel_id 0
+	set style_color_sel {}
 	
 	set signelement 0
 	set new_molid [molinfo list]
@@ -1278,6 +1459,9 @@ proc ::Molcontrl::geometry {W} {
 
 	foreach index [$W curselection] {
 		lappend select_files $index
+
+		#select id
+                set select_id $index
 
 		#get id
 		set id [lindex $molid $index]
@@ -1293,54 +1477,15 @@ proc ::Molcontrl::geometry {W} {
 			return
 		}
 
-		#determine if there is an element in 76-77
-		#Determine if there is charge after the 79th column
-		set thisfile [molinfo $id get filename]
-		set f_length [string length $thisfile]
-		set f_first [string range $thisfile 0 1]
-		set f_last [string range $thisfile $f_length-2 $f_length-1]
-		set f_judge_first [string equal $f_first "{{"]
-		set f_judge_second [string equal $f_last "}}"]
-		if {$f_judge_first==1&&$f_judge_second==1} {
-			set real_name [string range $thisfile 2 $f_length-3]
-			set f [open $real_name r]
-		} else {
-			set f_start [string index $thisfile 0]
-			set f_end [string index $thisfile end]
-			set is_start_bra [string equal $f_start "{"]
-			set is_end_bra [string equal $f_end "}"]
-			if {$is_start_bra==1&&$is_end_bra==1} {
-				set real_name [string range $thisfile 1 $f_length-2]
-				set f [open $real_name r]
-			} else {
-				set f [open $thisfile r]
-			}
-		}
-		set find_atom "ATOM"
-		set row 0
-		while {[eof $f]!=1} {
-			incr row
-			gets $f line
-			set sense [string first $find_atom $line]
-			if {$sense==0} {
-				set deter_element [string range $line 76 77]
-				if {$deter_element=="  "} {
-					set signelement 1
-				}
-				set deter_charge [string range $line 80 end]
-				if {$deter_charge==""} {
-					lappend last_charge "NaN"
-				} else {
-					lappend last_charge $deter_charge
-				}
-			}
-		}
-		close $f
 		#get center
 		set atomsel [atomselect $id all]
 		set cmd "all"
 		set center_sel [atomselect $id all]
-		set center_f [measure center $center_sel]
+		if {[catch {set center_f [measure center $center_sel]}]} {
+			set msg "PDB file does not exist"
+			tk_messageBox -title "PDB error" -parent .textview -type ok -message $msg
+			return
+		}
 		set number 0
 		set centerlength [llength $center_f]
 		while {$number<$centerlength} {
@@ -1353,7 +1498,12 @@ proc ::Molcontrl::geometry {W} {
 		#get chain
 		set command [format "%s get chain" $atomsel]
 		set all_chain [eval $command]
-		set chain [lsort -unique $all_chain]
+		foreach chain_val $all_chain {
+			set is_in_chain [lsearch $chain $chain_val]
+			if {$is_in_chain==-1} {
+				lappend chain $chain_val
+			}
+		}
 		#get resid
 #		set command [format "%s get resid" $atomsel]
 #                set all_resid [eval $command]
@@ -1371,6 +1521,44 @@ proc ::Molcontrl::geometry {W} {
 #                        	lappend residue $cate_num
 #			}
 #                }
+
+		#get residue
+		set chain_fir [lindex $chain 0]
+		set chain_list_select $chain_fir
+		set chain_id $chain_fir
+		set chain_sel [atomselect $id "chain '$chain_fir'"]
+		set resid_all_fir [$chain_sel get resid]
+                set residue_all_fir [$chain_sel get resname]
+
+		set number 0
+                foreach var $resid_all_fir {
+			set residue_fir_single [lindex $residue_all_fir $number]
+			set resid_residue [format "%d %s" $var $residue_fir_single]
+			lappend resid_residue_list $resid_residue
+			incr number
+                }
+		set resid_residue_list [lsort -dictionary -unique $resid_residue_list]
+
+		#get atom initialize
+		set resid_residue_fir [lindex $resid_residue_list 0]
+		set resid_residue_fir_list [split $resid_residue_fir " "]
+		set resid_fir [lindex $resid_residue_fir_list 0]
+		set residue_list_select $resid_fir
+		set atom_sel [atomselect $id "chain '$chain_fir' and resid '$resid_fir'"]
+                #get atom name
+                set atom_name_list [$atom_sel get name]
+		set atom_number_from_zero [$atom_sel list]
+		set atom_number {}
+		foreach var $atom_number_from_zero {
+			lappend atom_number [expr $var + 1]
+		}
+		set number 0
+                foreach var $atom_number {
+                        set atom_name [lindex $atom_name_list $number]
+                        incr number
+                        set number_name [format "%d %s" $var $atom_name]
+                        lappend residue_atom $number_name
+                }
 
 		#get residue count
 		set flag 0
@@ -1408,6 +1596,13 @@ proc ::Molcontrl::geometry {W} {
 			lappend residue_count $residue_number
 		}
 
+		#get res_location
+		set res_loc_fir [lindex $residue_count 0]
+		set res_loc_fir_list [split $res_loc_fir " "]
+		set res_select_fir [lindex $res_loc_fir_list 0]
+		set sel [atomselect $id "resname '$res_select_fir'"]
+                set residue_id_all [$sel get resid]
+                set residue_id [lsort -integer -unique $residue_id_all]
 
 		#get element
 		if {$signelement==0} {
@@ -1469,26 +1664,12 @@ proc ::Molcontrl::geometry {W} {
 
 
 		#get weight
-		set weight_sel [format "%s get element" $center_sel]
-                set weight_list [eval $weight_sel]
-                set weight 0
-                foreach va1 $weight_list {
-                        set number 0
-                        foreach va2 $element_mass {
-                                if {$va1==$va2} {
-                                        incr number
-                                        set single_mass [lindex $element_mass $number]
-                                        set weight [expr $weight + $single_mass]
-                                        break
-                                }
-                                incr number
-                        }
+		set weight_all [$center_sel get mass]
+		set weight 0
+		foreach wei $weight_all {
+			set weight [expr $weight + $wei]
 		}
 		set weight [format "%.2f" $weight]
-
-		
-		#select id
-                set select_id $index
 
 		#pbc            
         	set pbcsit [molinfo $id get {a b c alpha beta gamma}]
@@ -1606,6 +1787,33 @@ proc ::Molcontrl::geometry {W} {
 			incr number
 		}
 
+		# minx miny minz maxx maxy maxz
+		set sel [atomselect $id all]
+		set minmax_list [measure minmax $sel]
+		set min_list [lindex $minmax_list 0]
+		set max_list [lindex $minmax_list 1]
+
+		set x_min_f [lindex $min_list 0]
+		set x_min [format "%.2f" $x_min_f]
+		set y_min_f [lindex $min_list 1]
+		set y_min [format "%.2f" $y_min_f]
+		set z_min_f [lindex $min_list 2]
+		set z_min [format "%.2f" $z_min_f]
+
+		set x_max_f [lindex $max_list 0]
+		set x_max [format "%.2f" $x_max_f]
+		set y_max_f [lindex $max_list 1]
+		set y_max [format "%.2f" $y_max_f]
+		set z_max_f [lindex $max_list 2]
+		set z_max [format "%.2f" $z_max_f]
+
+		set size_x_f [expr $x_max - $x_min]
+		set size_x [format "%.2f" $size_x_f]
+		set size_y_f [expr $y_max - $y_min]
+		set size_y [format "%.2f" $size_y_f]
+		set size_z_f [expr $z_max - $z_min]
+		set size_z [format "%.2f" $size_z_f]
+
 		#clear
 		::Molcontrl::clear
 	}
@@ -1662,6 +1870,7 @@ proc ::Molcontrl::color {} {
 	variable info_sel_list
 	variable info_material_list
 	variable color_ID_list
+	variable index_out
 
 	if {$cmd==""} {
 		return
@@ -1686,6 +1895,9 @@ proc ::Molcontrl::color {} {
 
 	::Molcontrl::ref_sty_col_sel
 	if {$style_color_sel==""} {
+		return
+	}
+	if {$index_out==1} {
 		return
 	}
 
@@ -1726,7 +1938,6 @@ proc ::Molcontrl::color {} {
 	if {$is_structure==1} {
 		set color_type "Structure"
 	}
-	
 
 	if {$flag==0} {
 		.textview.all.first.structure.all.highlight.draw.color.colorid configure -state disabled
@@ -1776,8 +1987,8 @@ proc ::Molcontrl::color {} {
 #		mol default color ColorID [$this_color]
 #		mol default representation $draw_type
 		set with_colorid [format "ColorID %d" $this_color]
-		lset info_color_list $style_color_sel_id $with_colorid
-		lset color_ID_list $style_color_sel_id $color_ID
+		lset info_color_list $style_color_sel_id "ColorID"
+		lset color_ID_list $style_color_sel_id $this_color
 	}
 
 	lset info_style_list $style_color_sel_id $draw_type
@@ -1884,6 +2095,7 @@ proc ::Molcontrl::delete_rep {} {
 	} else {
         	mol delrep $style_color_sel_id $id
         	::Molcontrl::ref_sty_col_sel_list
+		set style_color_sel_length [llength $style_color_sel]
 		set style_color_sel_id [expr $style_color_sel_length - 1]
 		if {$style_color_sel_id<0} {
 			set style_color_sel_id 0
@@ -2182,6 +2394,7 @@ proc ::Molcontrl::ref_sty_col_sel {} {
 	variable info_style_list
 	variable info_sel_list
 	variable color_ID_list
+	variable index_out
 
 	set this_style [lindex $info_style_list $style_color_sel_id]
 	set this_style_list [list $this_style]
@@ -2192,12 +2405,22 @@ proc ::Molcontrl::ref_sty_col_sel {} {
 	set color_and_id_list [list $color_and_id]
 	set this_sel [lindex $info_sel_list $style_color_sel_id]
 	set this_sel_list [list $this_sel]
-	
-	set single_info [format "%s %s %s" $this_style_list $this_color_list $this_sel_list]
+
+	if {$this_color=="ColorID"} {	
+		set single_info [format "%s %s %s" $this_style_list $color_and_id_list $this_sel_list]
+	} else {
+		set single_info [format "%s %s %s" $this_style_list $this_color_list $this_sel_list]
+	}
+
 	if {$style_color_sel==""} {
 		return
 	}
-	lset style_color_sel $style_color_sel_id $single_info
+	if {[catch {lset style_color_sel $style_color_sel_id $single_info}]} {
+		set index_out 1
+		return
+	} else {
+		set index_out 0
+	}
 }
 #show select chain
 proc ::Molcontrl::show_select_chain {W} {
@@ -2221,13 +2444,21 @@ proc ::Molcontrl::show_select_chain {W} {
 	variable cmd
 	variable is_top
 
+	::Molcontrl::ref_sty_col_sel_list
 	set style_color_sel_len [llength $style_color_sel]
+
 	if {$style_color_sel_len==0} {
-		return
-	}
-	if {$all_mol==0} {
                 return
         }
+        if {$all_mol==0} {
+                return
+        }
+
+	if {$style_color_sel_len<=$style_color_sel_id} {
+		set msg "Please select a rep"
+                tk_messageBox -title "Rep error" -parent .textview -type ok -message $msg
+		return
+	}
 
 	set new_molid [molinfo list]
         set id [lindex $molid $select_id]
@@ -2262,10 +2493,10 @@ proc ::Molcontrl::show_select_chain {W} {
 	        if {$flag==0} {
         	        .textview.all.first.structure.all.highlight.draw.color.colorid configure -state disabled
                 	set id [lindex $molid $select_id]
-                	mol modselect $rep_sel $id chain $need_to_show
-                	mol modcolor $rep_sel $id $color_type
-                	mol modstyle $rep_sel $id $draw_type
-                	mol modmaterial $rep_sel $id $material_type
+                	mol modselect $style_color_sel_id $id "chain '$need_to_show'"
+                	mol modcolor $style_color_sel_id $id $color_type
+                	mol modstyle $style_color_sel_id $id $draw_type
+                	mol modmaterial $style_color_sel_id $id $material_type
         	}
 
 	        if {$flag==1} {
@@ -2274,21 +2505,22 @@ proc ::Molcontrl::show_select_chain {W} {
                 	set this_color [lindex $color_list 0]
 
 	                set id [lindex $molid $select_id]
-                	mol modselect $rep_sel $id chain $need_to_show
-                	mol modcolor $rep_sel $id ColorID $this_color
-                	mol modstyle $rep_sel $id $draw_type
-                	mol modmaterial $rep_sel $id $material_type
+                	mol modselect $style_color_sel_id $id "chain '$need_to_show'"
+                	mol modcolor $style_color_sel_id $id ColorID $this_color
+                	mol modstyle $style_color_sel_id $id $draw_type
+                	mol modmaterial $style_color_sel_id $id $material_type
         	}
 
 		set is_select 1
 
-		set this_sel_info [format "chain %s" $need_to_show]
+		set this_sel_info [format "chain '%s'" $need_to_show]
 		lset info_sel_list $style_color_sel_id $this_sel_info
 		set cmd $this_sel_info
 
 		::Molcontrl::ref_sty_col_sel
 		::Molcontrl::show_center
 		::Molcontrl::show_weight
+		::Molcontrl::minmax
 	}
 }
 proc ::Molcontrl::show_select_residue {W} {
@@ -2314,11 +2546,19 @@ proc ::Molcontrl::show_select_residue {W} {
 	variable cmd
 	variable is_top
 
-	set style_color_sel_len [llength $style_color_sel]
-        if {$style_color_sel_len==0} {
+	::Molcontrl::ref_sty_col_sel_list
+        set style_color_sel_len [llength $style_color_sel]
+
+	if {$style_color_sel_len==0} {
                 return
         }
-	if {$all_mol==0} {
+        if {$all_mol==0} {
+                return
+        }
+
+        if {$style_color_sel_len<=$style_color_sel_id} {
+		set msg "Please select a rep"
+                tk_messageBox -title "Rep error" -parent .textview -type ok -message $msg
                 return
         }
 
@@ -2335,6 +2575,7 @@ proc ::Molcontrl::show_select_residue {W} {
                 #tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
                 return
         }
+
 	
 	if {$is_top==1} {
                 set style_color_sel_id 0
@@ -2357,10 +2598,15 @@ proc ::Molcontrl::show_select_residue {W} {
                 if {$flag==0} {
                         .textview.all.first.structure.all.highlight.draw.color.colorid configure -state disabled
                         set id [lindex $molid $select_id]
-                        mol modselect $rep_sel $id "chain $chain_list_select and resid $need_to_show"
-                        mol modcolor $rep_sel $id $color_type
-                        mol modstyle $rep_sel $id $draw_type
-                        mol modmaterial $rep_sel $id $material_type
+			if {[catch {mol modselect $style_color_sel_id $id "chain '$chain_list_select' and resid '$need_to_show'"}]} {
+				set msg "Please select chain first"
+				tk_messageBox -title "Rep error" -parent .textview -type ok -message $msg
+				return
+			}
+#			mol modselect $style_color_sel_id $id "chain $chain_list_select and resid $need_to_show"
+                        mol modcolor $style_color_sel_id $id $color_type
+                        mol modstyle $style_color_sel_id $id $draw_type
+                        mol modmaterial $style_color_sel_id $id $material_type
                 }
 
                 if {$flag==1} {
@@ -2369,20 +2615,26 @@ proc ::Molcontrl::show_select_residue {W} {
                         set this_color [lindex $color_list 0]
 
                         set id [lindex $molid $select_id]
-                        mol modselect $rep_sel $id "chain $chain_list_select and resid $need_to_show"
-                        mol modcolor $rep_sel $id ColorID $this_color
-                        mol modstyle $rep_sel $id $draw_type
-                        mol modmaterial $rep_sel $id $material_type
+			if {[catch {mol modselect $style_color_sel_id $id "chain '$chain_list_select' and resid '$need_to_show'"}]} {
+                                set msg "Please select chain first"
+                                tk_messageBox -title "Rep error" -parent .textview -type ok -message $msg
+                                return
+                        }
+#			mol modselect $style_color_sel_id $id "chain $chain_list_select and resid $need_to_show"
+                        mol modcolor $style_color_sel_id $id ColorID $this_color
+                        mol modstyle $style_color_sel_id $id $draw_type
+                        mol modmaterial $style_color_sel_id $id $material_type
                 }
 		set is_select 1
 
-                set this_sel_info [format "chain %s and resid %s" $chain_list_select $need_to_show]
+                set this_sel_info [format "chain '%s' and resid '%s'" $chain_list_select $need_to_show]
 		lset info_sel_list $style_color_sel_id $this_sel_info
 		set cmd $this_sel_info
 
 		::Molcontrl::ref_sty_col_sel
 		::Molcontrl::show_center
 		::Molcontrl::show_weight
+		::Molcontrl::minmax
 	}
 }
 proc ::Molcontrl::show_select_residueatom {W} {
@@ -2408,11 +2660,7 @@ proc ::Molcontrl::show_select_residueatom {W} {
 	variable cmd
 	variable is_top
 
-	set style_color_sel_len [llength $style_color_sel]
-        if {$style_color_sel_len==0} {
-                return
-        }
-	if {$all_mol==0} {
+        if {$all_mol==0} {
                 return
         }
 
@@ -2427,6 +2675,19 @@ proc ::Molcontrl::show_select_residueatom {W} {
         if {$need_to_refresh==1} {
                 set msg "File does not exist, please refresh the list"
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
+                return
+        }
+
+	::Molcontrl::ref_sty_col_sel_list
+        set style_color_sel_len [llength $style_color_sel]
+
+        if {$style_color_sel_len==0} {
+                return
+        }
+
+        if {$style_color_sel_len<=$style_color_sel_id} {
+                set msg "Please select a rep"
+                tk_messageBox -title "Rep error" -parent .textview -type ok -message $msg
                 return
         }
 
@@ -2450,10 +2711,16 @@ proc ::Molcontrl::show_select_residueatom {W} {
                 if {$flag==0} {
                         .textview.all.first.structure.all.highlight.draw.color.colorid configure -state disabled
                         set id [lindex $molid $select_id]
-                        mol modselect $rep_sel $id "chain $chain_list_select and resid $residue_list_select and index [expr $need_to_show - 1]"
-                        mol modcolor $rep_sel $id $color_type
-                        mol modstyle $rep_sel $id $draw_type
-                        mol modmaterial $rep_sel $id $material_type
+			if {[catch {mol modselect $style_color_sel_id $id "chain '$chain_list_select' and resid '$residue_list_select' and index [expr $need_to_show - 1]"}]} {
+                                set msg "Please select chain and residue first"
+                                tk_messageBox -title "Rep error" -parent .textview -type ok -message $msg
+                                return
+                        }
+
+#			mol modselect $style_color_sel_id $id "chain $chain_list_select and resid $residue_list_select and index [expr $need_to_show - 1]"
+                        mol modcolor $style_color_sel_id $id $color_type
+                        mol modstyle $style_color_sel_id $id $draw_type
+                        mol modmaterial $style_color_sel_id $id $material_type
                 }
 
                 if {$flag==1} {
@@ -2462,21 +2729,28 @@ proc ::Molcontrl::show_select_residueatom {W} {
                         set this_color [lindex $color_list 0]
 
                         set id [lindex $molid $select_id]
-                        mol modselect $rep_sel $id "chain $chain_list_select and resid $residue_list_select and index [expr $need_to_show - 1]"
-                        mol modcolor $rep_sel $id ColorID $this_color
-                        mol modstyle $rep_sel $id $draw_type
-                        mol modmaterial $rep_sel $id $material_type
+			if {[catch {mol modselect $style_color_sel_id $id "chain '$chain_list_select' and resid '$residue_list_select' and index [expr $need_to_show - 1]"}]} {
+                                set msg "Please select chain and residue first"
+                                tk_messageBox -title "Rep error" -parent .textview -type ok -message $msg
+                                return
+                        }
+
+#			mol modselect $style_color_sel_id $id "chain $chain_list_select and resid $residue_list_select and index [expr $need_to_show - 1]"
+                        mol modcolor $style_color_sel_id $id ColorID $this_color
+                        mol modstyle $style_color_sel_id $id $draw_type
+                        mol modmaterial $style_color_sel_id $id $material_type
                 }
 		set is_select 1
 		
 		set this_index [expr $need_to_show - 1]
-                set this_sel_info [format "chain %s and resid %s and index %d" $chain_list_select $residue_list_select $this_index]
+                set this_sel_info [format "chain '%s' and resid '%s' and index %d" $chain_list_select $residue_list_select $this_index]
 		lset info_sel_list $style_color_sel_id $this_sel_info
 		set cmd $this_sel_info
 
 		::Molcontrl::ref_sty_col_sel
 		::Molcontrl::show_center
 		::Molcontrl::show_weight
+		::Molcontrl::minmax
         }
 }
 proc ::Molcontrl::show_select_residueall {W} {
@@ -2499,11 +2773,19 @@ proc ::Molcontrl::show_select_residueall {W} {
 	variable cmd
 	variable is_top
 
-	set style_color_sel_len [llength $style_color_sel]
-        if {$style_color_sel_len==0} {
+	::Molcontrl::ref_sty_col_sel_list
+        set style_color_sel_len [llength $style_color_sel]
+
+	if {$style_color_sel_len==0} {
                 return
         }
-	if {$all_mol==0} {
+        if {$all_mol==0} {
+                return
+        }
+
+        if {$style_color_sel_len<=$style_color_sel_id} {
+		set msg "Please select a rep"
+                tk_messageBox -title "Rep error" -parent .textview -type ok -message $msg
                 return
         }
 
@@ -2541,10 +2823,10 @@ proc ::Molcontrl::show_select_residueall {W} {
                 if {$flag==0} {
                         .textview.all.first.structure.all.highlight.draw.color.colorid configure -state disabled
                         set id [lindex $molid $select_id]
-                        mol modselect $rep_sel $id resname $need_to_show
-                        mol modcolor $rep_sel $id $color_type
-                        mol modstyle $rep_sel $id $draw_type
-                        mol modmaterial $rep_sel $id $material_type
+                        mol modselect $style_color_sel_id $id "resname '$need_to_show'"
+                        mol modcolor $style_color_sel_id $id $color_type
+                        mol modstyle $style_color_sel_id $id $draw_type
+                        mol modmaterial $style_color_sel_id $id $material_type
                 }
 
                 if {$flag==1} {
@@ -2553,22 +2835,22 @@ proc ::Molcontrl::show_select_residueall {W} {
                         set this_color [lindex $color_list 0]
 
                         set id [lindex $molid $select_id]
-                        mol modselect $rep_sel $id resname $need_to_show
-                        mol modcolor $rep_sel $id ColorID $this_color
-                        mol modstyle $rep_sel $id $draw_type
-                        mol modmaterial $rep_sel $id $material_type
+                        mol modselect $style_color_sel_id $id "resname '$need_to_show'"
+                        mol modcolor $style_color_sel_id $id ColorID $this_color
+                        mol modstyle $style_color_sel_id $id $draw_type
+                        mol modmaterial $style_color_sel_id $id $material_type
                 }
 		set is_select 1
 
-                set this_sel_info [format "resname %s" $need_to_show]
+                set this_sel_info [format "resname '%s'" $need_to_show]
 		lset info_sel_list $style_color_sel_id $this_sel_info
 		set cmd $this_sel_info
 
 		::Molcontrl::ref_sty_col_sel
 		::Molcontrl::show_center
 		::Molcontrl::show_weight
+		::Molcontrl::minmax
 	}
-
 }
 proc ::Molcontrl::show_select_residueid {W} {
 	variable residue_id
@@ -2590,11 +2872,7 @@ proc ::Molcontrl::show_select_residueid {W} {
 	variable cmd
 	variable is_top
 	
-	set style_color_sel_len [llength $style_color_sel]
-        if {$style_color_sel_len==0} {
-                return
-        }
-	if {$all_mol==0} {
+        if {$all_mol==0} {
                 return
         }
 
@@ -2609,6 +2887,19 @@ proc ::Molcontrl::show_select_residueid {W} {
         if {$need_to_refresh==1} {
                 set msg "File does not exist, please refresh the list"
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
+                return
+        }
+
+	::Molcontrl::ref_sty_col_sel_list
+        set style_color_sel_len [llength $style_color_sel]
+
+        if {$style_color_sel_len==0} {
+                return
+        }
+
+        if {$style_color_sel_len<=$style_color_sel_id} {
+                set msg "Please select a rep"
+                tk_messageBox -title "Rep error" -parent .textview -type ok -message $msg
                 return
         }
 
@@ -2630,10 +2921,10 @@ proc ::Molcontrl::show_select_residueid {W} {
                 if {$flag==0} {
                         .textview.all.first.structure.all.highlight.draw.color.colorid configure -state disabled                  
                         set id [lindex $molid $select_id]
-                        mol modselect $rep_sel $id resid $need_to_show
-                        mol modcolor $rep_sel $id $color_type
-                        mol modstyle $rep_sel $id $draw_type
-                        mol modmaterial $rep_sel $id $material_type
+                        mol modselect $style_color_sel_id $id "resid '$need_to_show'"
+                        mol modcolor $style_color_sel_id $id $color_type
+                        mol modstyle $style_color_sel_id $id $draw_type
+                        mol modmaterial $style_color_sel_id $id $material_type
                 }
 
                 if {$flag==1} {
@@ -2642,20 +2933,21 @@ proc ::Molcontrl::show_select_residueid {W} {
                         set this_color [lindex $color_list 0]
 
                         set id [lindex $molid $select_id]
-                        mol modselect $rep_sel $id resid $need_to_show
-                        mol modcolor $rep_sel $id ColorID $this_color
-                        mol modstyle $rep_sel $id $draw_type
-                        mol modmaterial $rep_sel $id $material_type
+                        mol modselect $style_color_sel_id $id "resid '$need_to_show'"
+                        mol modcolor $style_color_sel_id $id ColorID $this_color
+                        mol modstyle $style_color_sel_id $id $draw_type
+                        mol modmaterial $style_color_sel_id $id $material_type
                 }
                 set is_select 1
 
-                set this_sel_info [format "resid %s" $need_to_show]
+                set this_sel_info [format "resid '%s'" $need_to_show]
                 lset info_sel_list $style_color_sel_id $this_sel_info
 		set cmd $this_sel_info
 
                 ::Molcontrl::ref_sty_col_sel
 		::Molcontrl::show_center
 		::Molcontrl::show_weight
+		::Molcontrl::minmax
         }
 }
 proc ::Molcontrl::show_select_element {W} {
@@ -2889,6 +3181,78 @@ proc ::Molcontrl::show_center {} {
 		}
 	}
 }
+#get x y z min max
+proc ::Molcontrl::minmax {} {
+	variable cmd
+	variable select_id
+	variable molid
+	variable x_min
+	variable y_min
+	variable z_min
+	variable x_max
+	variable y_max
+	variable z_max
+	variable all_mol
+	variable all_atom_number
+	variable size_x
+	variable size_y
+	variable size_z
+
+	if {$cmd==""} {
+                return
+        }
+        if {$all_mol==0} {
+                return
+        }
+
+	set new_molid [molinfo list]
+        set id [lindex $molid $select_id]
+        set need_to_refresh 1
+        foreach val $new_molid {
+                if {$val==$id} {
+                        set need_to_refresh 0
+                }
+        }
+        if {$need_to_refresh==1} {
+                return
+        }
+
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
+                return
+        }
+
+	set id [lindex $molid $select_id]
+	if {[catch {set sel [atomselect $id $cmd]}]} {
+                set msg "The atom selection you typed could not be understood"
+                tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                return
+        }
+	set minmax_list [measure minmax $sel]
+	set min_list [lindex $minmax_list 0]
+	set max_list [lindex $minmax_list 1]
+
+	set x_min_f [lindex $min_list 0]
+	set x_min [format "%.2f" $x_min_f]
+	set y_min_f [lindex $min_list 1]
+        set y_min [format "%.2f" $y_min_f]
+	set z_min_f [lindex $min_list 2]
+        set z_min [format "%.2f" $z_min_f]
+
+	set x_max_f [lindex $max_list 0]
+	set x_max [format "%.2f" $x_max_f]
+	set y_max_f [lindex $max_list 1]
+        set y_max [format "%.2f" $y_max_f]
+	set z_max_f [lindex $max_list 2]
+        set z_max [format "%.2f" $z_max_f]
+
+	set size_x_f [expr $x_max - $x_min]
+	set size_x [format "%.2f" $size_x_f]
+	set size_y_f [expr $y_max - $y_min]
+	set size_y [format "%.2f" $size_y_f]
+	set size_z_f [expr $z_max - $z_min]
+	set size_z [format "%.2f" $size_z_f]
+}
 #get resid_residue
 proc ::Molcontrl::resid_residue {W} {
         variable molid
@@ -2922,24 +3286,18 @@ proc ::Molcontrl::resid_residue {W} {
 
         foreach index [$W curselection] {
                 set chain_id [lindex $chain $index]
-                set chain_sel [atomselect $id "chain $chain_id"]
+                set chain_sel [atomselect $id "chain '$chain_id'"]
                 set resid_all [$chain_sel get resid]
                 set residue_all [$chain_sel get resname]
-#		puts "ls $residue_all"
 
                 foreach var $resid_all {
                         set residue_single [lindex $residue_all $number]
-                        incr number
-                        if {$var!=$flag} {
-                                set flag $var
-                                set resid_residue [format "%d %s" $var $residue_single]
-                                lappend resid_residue_list $resid_residue
-                        }
+			set resid_residue [format "%d %s" $var $residue_single]
+			lappend resid_residue_list $resid_residue
+			incr number
                 }
-#               set resid_residue_list [lsort -unique $resid_residue_list_all]
-#               puts "$resid_residue_list"
+		set resid_residue_list [lsort -dictionary -unique $resid_residue_list]
         }
-
 }
 #get atom
 proc ::Molcontrl::get_atom {W} {
@@ -2977,7 +3335,7 @@ proc ::Molcontrl::get_atom {W} {
 		set resid_residue [lindex $resid_residue_list $index]
 		set split_list [split $resid_residue " "]
 		set resid_number [lindex $split_list 0]
-		set atom_sel_command [format "atomselect %d {chain %s and resid %d}" $id $chain_id $resid_number]
+		set atom_sel_command [format "atomselect %d {chain '%s' and resid '%d'}" $id $chain_id $resid_number]
 		set atom_sel [eval $atom_sel_command]
 		set atom_from_zero [$atom_sel list]
 
@@ -3083,7 +3441,7 @@ proc ::Molcontrl::get_id {W} {
 		set res_count_list [split $res_count " "]
 		set res_select [lindex $res_count_list 0]
 
-		set sel [atomselect $id "resname $res_select"]
+		set sel [atomselect $id "resname '$res_select'"]
 		set residue_id_all [$sel get resid]
 		set residue_id [lsort -integer -unique $residue_id_all]
 	}
@@ -3149,6 +3507,7 @@ proc ::Molcontrl::change {} {
         grid .textview.all.first.moving.shift.translate.down.pack_x.x .textview.all.first.moving.shift.translate.down.pack_x.x_sit .textview.all.first.moving.shift.translate.down.pack_x.x_scale
         bind .textview.all.first.moving.shift.translate.down.pack_x.x_sit <Return> {
                 ::Molcontrl::move_trans
+		::Molcontrl::reset
         }
 
         label .textview.all.first.moving.shift.translate.down.pack_y.y -text "Y:"
@@ -3157,6 +3516,7 @@ proc ::Molcontrl::change {} {
         grid .textview.all.first.moving.shift.translate.down.pack_y.y .textview.all.first.moving.shift.translate.down.pack_y.y_sit .textview.all.first.moving.shift.translate.down.pack_y.y_scale
         bind .textview.all.first.moving.shift.translate.down.pack_y.y_sit <Return> {
                 ::Molcontrl::move_trans
+		::Molcontrl::reset
         }
 
         label .textview.all.first.moving.shift.translate.down.pack_z.z -text "Z:"
@@ -3165,6 +3525,7 @@ proc ::Molcontrl::change {} {
         grid .textview.all.first.moving.shift.translate.down.pack_z.z .textview.all.first.moving.shift.translate.down.pack_z.z_sit .textview.all.first.moving.shift.translate.down.pack_z.z_scale
         bind .textview.all.first.moving.shift.translate.down.pack_z.z_sit <Return> {
                 ::Molcontrl::move_trans
+		::Molcontrl::reset
         }
 }
 #pbc
@@ -3179,6 +3540,8 @@ proc ::Molcontrl::pbcset {} {
 	variable select_id
 	variable pbc_list
 	variable all_mol
+	variable all_atom_number
+	global vmd_logfile_channel
 	
 	if {$all_mol==0} {
                 return
@@ -3197,6 +3560,10 @@ proc ::Molcontrl::pbcset {} {
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
                 return
         }
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
+                return
+        }
 
 	set sit {}
 	lappend sit $crystal_size_a
@@ -3208,6 +3575,11 @@ proc ::Molcontrl::pbcset {} {
 	pbc set $sit -molid $id
 
 	lset pbc_list $select_id $sit
+
+	if {[catch {puts $vmd_logfile_channel "pbc set \{$sit\} -molid $id"}]} {
+		return
+	}
+	flush $vmd_logfile_channel
 }
 #command
 proc ::Molcontrl::command {} {
@@ -3227,8 +3599,9 @@ proc ::Molcontrl::command {} {
 	variable draw_type
 	variable color_type
 	variable material_type
-	variable rep_sel
 	variable info_sel_list
+	variable all_atom_number
+	variable color_ID_list
 
 	set center ""
 	set weight 0
@@ -3265,15 +3638,35 @@ proc ::Molcontrl::command {} {
                 return
 	}
 	
-	mol modselect $rep_sel $id $cmd
-	mol modcolor $rep_sel $id $color_type
-	mol modstyle $rep_sel $id $draw_type
-	mol modmaterial $rep_sel $id $material_type
+	::Molcontrl::ref_sty_col_sel_list
+        set style_color_sel_len [llength $style_color_sel]
+        if {$style_color_sel_len<=$style_color_sel_id} {
+                set msg "Please select a rep"
+                tk_messageBox -title "Rep error" -parent .textview -type ok -message $msg
+                return
+        }
 
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
+                return
+        }
+	
 	set is_cmd 1
 
         set this_draw_info $draw_type
-        set this_color_info $color_type
+	if {$color_type!="ColorID"} {
+		set this_color_info $color_type
+	} else {
+		set color_ID_number [lindex $color_ID_list $style_color_sel_id]
+		set this_color_info [format "ColorID %d" $color_ID_number]
+	}
+	
+	::Molcontrl::ref_sty_col_sel_list
+	mol modselect $style_color_sel_id $id $cmd
+        mol modcolor $style_color_sel_id $id $this_color_info
+        mol modstyle $style_color_sel_id $id $draw_type
+        mol modmaterial $style_color_sel_id $id $material_type
+	
         set this_sel_info $cmd
 
         set this_draw_info_list [list $this_draw_info]
@@ -3281,11 +3674,12 @@ proc ::Molcontrl::command {} {
         set this_sel_info_list [list $this_sel_info]
 
         set single_info [format "%s %s %s" $this_draw_info_list $this_color_info_list $this_sel_info_list]
-        lset style_color_sel $style_color_sel_id $single_info
+	lset style_color_sel $style_color_sel_id $single_info
         lset info_sel_list $style_color_sel_id $cmd
 
 	::Molcontrl::show_center
 	::Molcontrl::show_weight
+	::Molcontrl::minmax
 }
 #weight
 proc ::Molcontrl::show_weight {} {
@@ -3310,23 +3704,10 @@ proc ::Molcontrl::show_weight {} {
 		return
 	}
 	set center_sel [atomselect $id $cmd]
-
-
-	set weight_sel [format "%s get element" $center_sel]
-        set weight_list [eval $weight_sel]
-
-        foreach va1 $weight_list {
-                set number 0
-                foreach va2 $element_mass {
-                        if {$va1==$va2} {
-                                incr number
-                                set single_mass [lindex $element_mass $number]
-                                set weight [expr $weight + $single_mass]
-                                break
-                        }
-                        incr number
-                }
-        }
+	set weight_all [$center_sel get mass]
+	foreach wei $weight_all {
+		set weight [expr $weight + $wei]
+	}
         set weight [format "%.2f" $weight]
 }
 #pbc box
@@ -3334,6 +3715,7 @@ proc ::Molcontrl::turnon {} {
 	variable molid
 	variable select_id
 	variable all_mol
+	global vmd_logfile_channel
 
 	if {$all_mol==0} {
 		return
@@ -3356,13 +3738,22 @@ proc ::Molcontrl::turnon {} {
 	set id [lindex $molid $select_id]
 	foreach val $molid {
 		pbc box -molid $val -off
+		if {[catch {puts $vmd_logfile_channel "pbc box -molid $val -off"}]} {
+			continue
+		}
 	}
 	pbc box -molid $id -on
+
+	if {[catch {puts $vmd_logfile_channel "pbc box -molid $id -on"}]} {
+		return
+	}
+	flush $vmd_logfile_channel
 }
 proc ::Molcontrl::turnoff {} {
 	variable molid
 	variable select_id
 	variable all_mol
+	global vmd_logfile_channel
 
 	if {$all_mol==0} {
 		return
@@ -3377,13 +3768,42 @@ proc ::Molcontrl::turnoff {} {
 		}
 	}
 	if {$need_to_refresh==1} {
-		set msg "File does not exist, please refresh the list"
-		tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
+#		set msg "File does not exist, please refresh the list"
+#		tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
 		return
 	}
 	
 	foreach val $molid {
 		pbc box -molid $val -off
+		if {[catch {puts $vmd_logfile_channel "pbc box -molid $val -off"}]} {
+			continue
+		}
+	}
+	if {[catch {flush $vmd_logfile_channel}]} {
+		return
+	}
+}
+#logfile turn on
+proc ::Molcontrl::logfile_turnon {} {
+	global vmd_logfile_channel
+
+	set logfilename [tk_getSaveFile -filetypes  {{{Text Files} {.txt}} {All *}}]
+	set file_len [string length $logfilename]
+	if {$file_len==0} {
+		set ::Molcontrl::turnon_logfile 0
+		return
+	}
+	set rc [catch { open $logfilename w } log_msg]
+	set vmd_logfile_channel $log_msg
+	puts $vmd_logfile_channel "# [vmdinfo versionmsg]"
+	puts $vmd_logfile_channel "# Log file $logfilename, created by user $::tcl_platform(user), developed by Chenchen Wu"
+	flush $vmd_logfile_channel
+}
+proc ::Molcontrl::logfile_turnoff {} {
+	global vmd_logfile_channel
+
+	if {[catch {close $vmd_logfile_channel}]} {
+		return
 	}
 }
 #default
@@ -3404,6 +3824,8 @@ proc ::Molcontrl::def {} {
 	variable rota_reference_x
 	variable rota_reference_y
 	variable rota_reference_z
+
+#	global vmd_logfile_channel
 
 	if {$all_mol==0} {
                 return
@@ -3442,6 +3864,15 @@ proc ::Molcontrl::def {} {
 	set rota_reference_x 0
 	set rota_reference_y 0
 	set rota_reference_z 0
+
+	::Molcontrl::show_center
+	::Molcontrl::minmax
+
+#	if {[catch {puts $vmd_logfile_channel "set sel \[atomselect $id all\]"}]} {
+#		return
+#	}
+#	puts $vmd_logfile_channel "\$sel set \{x y z\} \{$apos\}"
+#	flush $vmd_logfile_channel
 }
 #scroll-bar reset
 proc ::Molcontrl::reset {} {
@@ -3478,6 +3909,8 @@ proc ::Molcontrl::move_x {val} {
 	variable molid
         variable select_id
 	variable cmd
+	variable all_atom_number
+	global vmd_logfile_channel
 	
 	if {$all_mol==0} {
 		return
@@ -3495,6 +3928,10 @@ proc ::Molcontrl::move_x {val} {
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
                 return
         }
+	set is_zero_number [lindex $all_atom_number $select_id]
+	if {$is_zero_number==0} {
+		return
+	}
 
 	set x [expr $val-$trans_reference_x]
 	set trans_reference_x $val
@@ -3504,8 +3941,20 @@ proc ::Molcontrl::move_x {val} {
         lappend matrix $x
         lappend matrix $y
         lappend matrix $z
-        set sel [atomselect $id $cmd]
+	if {[catch {set sel [atomselect $id $cmd]}]} {
+                set msg "The atom selection you typed could not be understood"
+                tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                return
+        }
         $sel moveby $matrix
+	::Molcontrl::show_center
+	::Molcontrl::minmax
+
+	if {[catch {puts $vmd_logfile_channel "set sel \[atomselect $id \"$cmd\"\]"}]} {
+		return
+	}
+	puts $vmd_logfile_channel "\$sel moveby \{$matrix\}"
+	flush $vmd_logfile_channel
 }
 proc ::Molcontrl::move_y {val} {
 	variable trans_reference_y
@@ -3513,6 +3962,8 @@ proc ::Molcontrl::move_y {val} {
 	variable molid
         variable select_id
 	variable cmd
+	variable all_atom_number
+	global vmd_logfile_channel
 
         if {$all_mol==0} {
                 return
@@ -3528,6 +3979,10 @@ proc ::Molcontrl::move_y {val} {
         if {$need_to_refresh==1} {
                 set msg "File does not exist, please refresh the list"
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
+                return
+        }
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
                 return
         }
 
@@ -3539,8 +3994,20 @@ proc ::Molcontrl::move_y {val} {
         lappend matrix $x
         lappend matrix $y
         lappend matrix $z
-        set sel [atomselect $id $cmd]
+	if {[catch {set sel [atomselect $id $cmd]}]} {
+                set msg "The atom selection you typed could not be understood"
+                tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                return
+        }
         $sel moveby $matrix
+	::Molcontrl::show_center
+	::Molcontrl::minmax
+
+	if {[catch {puts $vmd_logfile_channel "set sel \[atomselect $id \"$cmd\"\]"}]} {
+                return
+        }
+        puts $vmd_logfile_channel "\$sel moveby \{$matrix\}"
+        flush $vmd_logfile_channel
 }
 proc ::Molcontrl::move_z {val} {
 	variable trans_reference_z
@@ -3548,6 +4015,8 @@ proc ::Molcontrl::move_z {val} {
 	variable molid
         variable select_id
 	variable cmd
+	variable all_atom_number
+	global vmd_logfile_channel
 
         if {$all_mol==0} {
                 return
@@ -3565,6 +4034,10 @@ proc ::Molcontrl::move_z {val} {
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
                 return
         }
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
+                return
+        }
 
         set x 0
         set y 0
@@ -3574,8 +4047,20 @@ proc ::Molcontrl::move_z {val} {
         lappend matrix $x
         lappend matrix $y
         lappend matrix $z
-        set sel [atomselect $id $cmd]
+	if {[catch {set sel [atomselect $id $cmd]}]} {
+                set msg "The atom selection you typed could not be understood"
+                tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                return
+        }
         $sel moveby $matrix
+	::Molcontrl::show_center
+	::Molcontrl::minmax
+
+	if {[catch {puts $vmd_logfile_channel "set sel \[atomselect $id \"$cmd\"\]"}]} {
+                return
+        }
+        puts $vmd_logfile_channel "\$sel moveby \{$matrix\}"
+        flush $vmd_logfile_channel
 }
 #entry trans
 proc ::Molcontrl::move_trans {} {
@@ -3586,6 +4071,8 @@ proc ::Molcontrl::move_trans {} {
         variable select_id
 	variable cmd
 	variable all_mol
+	variable all_atom_number
+	global vmd_logfile_channel
 
 	if {$all_mol==0} {
                 return
@@ -3604,14 +4091,29 @@ proc ::Molcontrl::move_trans {} {
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
                 return
         }
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
+                return
+        }
 	
 	set matrix {}
 	lappend matrix $trans_x
 	lappend matrix $trans_y
 	lappend matrix $trans_z
-	set sel [atomselect $id $cmd]
+	if {[catch {set sel [atomselect $id $cmd]}]} {
+                set msg "The atom selection you typed could not be understood"
+                tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                return
+        }
 	$sel moveby $matrix
-	::Molcontrl::reset
+	::Molcontrl::show_center
+	::Molcontrl::minmax
+
+	if {[catch {puts $vmd_logfile_channel "set sel \[atomselect $id \"$cmd\"\]"}]} {
+                return
+        }
+        puts $vmd_logfile_channel "\$sel moveby \{$matrix\}"
+        flush $vmd_logfile_channel
 }
 #entry rotate
 proc ::Molcontrl::move_rotax {} {
@@ -3624,6 +4126,8 @@ proc ::Molcontrl::move_rotax {} {
 	variable user_choice_y
 	variable user_choice_z
 	variable all_mol
+	variable all_atom_number
+	global vmd_logfile_channel
 
         if {$all_mol==0} {
                 return
@@ -3642,8 +4146,16 @@ proc ::Molcontrl::move_rotax {} {
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
                 return
         }
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
+                return
+        }
 
-	set sel [atomselect $id $cmd]
+	if {[catch {set sel [atomselect $id $cmd]}]} {
+                set msg "The atom selection you typed could not be understood"
+                tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                return
+        }
 	if {$is_center=="center"} {
 		set acen [measure center $sel]
 	}
@@ -3660,6 +4172,14 @@ proc ::Molcontrl::move_rotax {} {
                 lset acen 2 $user_choice_z
 	}
 	$sel move [trans center $acen axis x $rota_x]
+	::Molcontrl::show_center
+	::Molcontrl::minmax
+
+	if {[catch {puts $vmd_logfile_channel "set sel \[atomselect $id \"$cmd\"\]"}]} {
+                return
+        }
+        puts $vmd_logfile_channel "\$sel move \[trans center \{$acen\} axis x $rota_x\]"
+        flush $vmd_logfile_channel
 }
 proc ::Molcontrl::move_rotay {} {
         variable rota_y
@@ -3671,6 +4191,8 @@ proc ::Molcontrl::move_rotay {} {
         variable user_choice_y
         variable user_choice_z
 	variable all_mol
+	variable all_atom_number
+	global vmd_logfile_channel
 
         if {$all_mol==0} {
                 return
@@ -3689,8 +4211,16 @@ proc ::Molcontrl::move_rotay {} {
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
                 return
         }
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
+                return
+        }
 
-	set sel [atomselect $id $cmd]
+	if {[catch {set sel [atomselect $id $cmd]}]} {
+                set msg "The atom selection you typed could not be understood"
+                tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                return
+        }
         if {$is_center=="center"} {
                 set acen [measure center $sel]
         }
@@ -3707,6 +4237,14 @@ proc ::Molcontrl::move_rotay {} {
                 lset acen 2 $user_choice_z
         }
         $sel move [trans center $acen axis y $rota_y]
+	::Molcontrl::show_center
+	::Molcontrl::minmax
+
+	if {[catch {puts $vmd_logfile_channel "set sel \[atomselect $id \"$cmd\"\]"}]} {
+                return
+        }
+        puts $vmd_logfile_channel "\$sel move \[trans center \{$acen\} axis y $rota_y\]"
+        flush $vmd_logfile_channel
 }
 proc ::Molcontrl::move_rotaz {} {
         variable rota_z
@@ -3718,6 +4256,8 @@ proc ::Molcontrl::move_rotaz {} {
         variable user_choice_y
         variable user_choice_z
 	variable all_mol
+	variable all_atom_number
+	global vmd_logfile_channel
 
         if {$all_mol==0} {
                 return
@@ -3736,8 +4276,16 @@ proc ::Molcontrl::move_rotaz {} {
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
                 return
         }
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
+                return
+        }
 
-	set sel [atomselect $id $cmd]
+	if {[catch {set sel [atomselect $id $cmd]}]} {
+                set msg "The atom selection you typed could not be understood"
+                tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                return
+        }
         if {$is_center=="center"} {
                 set acen [measure center $sel]
         }
@@ -3754,6 +4302,14 @@ proc ::Molcontrl::move_rotaz {} {
                 lset acen 2 $user_choice_z
         }
         $sel move [trans center $acen axis z $rota_z]
+	::Molcontrl::show_center
+	::Molcontrl::minmax
+
+	if {[catch {puts $vmd_logfile_channel "set sel \[atomselect $id \"$cmd\"\]"}]} {
+                return
+        }
+        puts $vmd_logfile_channel "\$sel move \[trans center \{$acen\} axis z $rota_z\]"
+        flush $vmd_logfile_channel
 }
 #scale rotate
 proc ::Molcontrl::rotatex {val} {
@@ -3766,6 +4322,8 @@ proc ::Molcontrl::rotatex {val} {
 	variable user_choice_x
         variable user_choice_y
         variable user_choice_z
+	variable all_atom_number
+	global vmd_logfile_channel
 
 	if {$all_mol==0} {
                 return
@@ -3784,11 +4342,19 @@ proc ::Molcontrl::rotatex {val} {
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
                 return
         }
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
+                return
+        }
 
 	set x [expr $val-$rota_reference_x]
 	set rota_reference_x $val
 	
-	set sel [atomselect $id $cmd]
+	if {[catch {set sel [atomselect $id $cmd]}]} {
+                set msg "The atom selection you typed could not be understood"
+                tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                return
+        }
         if {$is_center=="center"} {
                 set acen [measure center $sel]
         }
@@ -3805,6 +4371,14 @@ proc ::Molcontrl::rotatex {val} {
 		lset acen 2 $user_choice_z
         }
         $sel move [trans center $acen axis x $x]
+	::Molcontrl::show_center
+	::Molcontrl::minmax
+
+	if {[catch {puts $vmd_logfile_channel "set sel \[atomselect $id \"$cmd\"\]"}]} {
+                return
+        }
+        puts $vmd_logfile_channel "\$sel move \[trans center \{$acen\} axis x $x\]"
+        flush $vmd_logfile_channel
 }
 proc ::Molcontrl::rotatey {val} {
 	variable is_center
@@ -3816,6 +4390,8 @@ proc ::Molcontrl::rotatey {val} {
 	variable user_choice_x
         variable user_choice_y
         variable user_choice_z
+	variable all_atom_number
+	global vmd_logfile_channel
 
 	if {$all_mol==0} {
                 return
@@ -3834,11 +4410,19 @@ proc ::Molcontrl::rotatey {val} {
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
                 return
         }
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
+                return
+        }
 
 	set x [expr $val-$rota_reference_y]
         set rota_reference_y $val
 
-        set sel [atomselect $id $cmd]
+	if {[catch {set sel [atomselect $id $cmd]}]} {
+                set msg "The atom selection you typed could not be understood"
+                tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                return
+        }
         if {$is_center=="center"} {
                 set acen [measure center $sel]
         }
@@ -3855,6 +4439,14 @@ proc ::Molcontrl::rotatey {val} {
                 lset acen 2 $user_choice_z
         }
         $sel move [trans center $acen axis y $x]
+	::Molcontrl::show_center
+	::Molcontrl::minmax
+
+	if {[catch {puts $vmd_logfile_channel "set sel \[atomselect $id \"$cmd\"\]"}]} {
+                return
+        }
+        puts $vmd_logfile_channel "\$sel move \[trans center \{$acen\} axis y $x\]"
+        flush $vmd_logfile_channel
 }
 proc ::Molcontrl::rotatez {val} {
 	variable is_center
@@ -3866,6 +4458,8 @@ proc ::Molcontrl::rotatez {val} {
 	variable user_choice_x
         variable user_choice_y
         variable user_choice_z
+	variable all_atom_number
+	global vmd_logfile_channel
 
 	if {$all_mol==0} {
                 return
@@ -3884,11 +4478,19 @@ proc ::Molcontrl::rotatez {val} {
                 tk_messageBox -title "File name Error" -parent .textview -type ok -message $msg
                 return
         }
+	set is_zero_number [lindex $all_atom_number $select_id]
+        if {$is_zero_number==0} {
+                return
+        }
 
 	set x [expr $val-$rota_reference_z]
         set rota_reference_z $val
 
-        set sel [atomselect $id $cmd]
+	if {[catch {set sel [atomselect $id $cmd]}]} {
+                set msg "The atom selection you typed could not be understood"
+                tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                return
+        }
         if {$is_center=="center"} {
                 set acen [measure center $sel]
         }
@@ -3905,6 +4507,14 @@ proc ::Molcontrl::rotatez {val} {
                 lset acen 2 $user_choice_z
         }
         $sel move [trans center $acen axis z $x]
+	::Molcontrl::show_center
+	::Molcontrl::minmax
+
+	if {[catch {puts $vmd_logfile_channel "set sel \[atomselect $id \"$cmd\"\]"}]} {
+                return
+        }
+        puts $vmd_logfile_channel "\$sel move \[trans center \{$acen\} axis z $x\]"
+        flush $vmd_logfile_channel
 }
 #select chain resid residue element atom charge
 proc ::Molcontrl::selectall {} {
@@ -4019,8 +4629,9 @@ proc ::Molcontrl::part {} {
 	set is_pdb [string equal $extension_name ".pdb"]
 	set is_gro [string equal $extension_name ".gro"]
 	set is_mol2 [string equal $extension_name ".mol2"]
+	set is_empty [string equal $extension_name ""]
 
-	if {$is_pdb==0&&$is_gro==0&&$is_mol2==0} {
+	if {$is_pdb==0&&$is_gro==0&&$is_mol2==0&&$is_empty==0} {
 		set msg "You should use a pdb/gro/mol2 file"
 		tk_messageBox -title "File type Error" -parent .textview -type ok -message $msg
 		return
@@ -4042,36 +4653,79 @@ proc ::Molcontrl::part {} {
 
 	if {$is_pdb==1} {
 		set id [lindex $molid $select_id]
-		set sel [atomselect $id $cmd]
+		if {[catch {set sel [atomselect $id $cmd]}]} {
+			set msg "The atom selection you typed could not be understood"
+			tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+			return
+		}
 		set filename [::Molcontrl::savefile]
 		set filelength [llength $filename]
         	if {$filelength==0} {
                 	return
         	}
-		$sel writepdb $filename
+		if {[catch {$sel writepdb $filename}]} {
+			set msg "webpdb does not exist"
+			tk_messageBox -title "File Error" -parent .textview -type ok -message $msg
+			return
+		}
 	}
 	
 	if {$is_gro==1} {
 		set id [lindex $molid $select_id]
-		set sel [atomselect $id $cmd]
+		if {[catch {set sel [atomselect $id $cmd]}]} {
+                        set msg "The atom selection you typed could not be understood"
+                        tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                        return
+                }
 		set filename [::Molcontrl::savefile]
 		set filelength [llength $filename]
         	if {$filelength==0} {
                 	return
         	}
-		$sel writepdb $filename
+		if {[catch {$sel writepdb $filename}]} {
+                        set msg "webpdb does not exist"
+                        tk_messageBox -title "File Error" -parent .textview -type ok -message $msg
+                        return
+                }
 	}
 
 	if {$is_mol2==1} {
 		set id [lindex $molid $select_id]
-		set sel [atomselect $id $cmd]
+		if {[catch {set sel [atomselect $id $cmd]}]} {
+                        set msg "The atom selection you typed could not be understood"
+                        tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                        return
+                }
 		set filename [::Molcontrl::savefile]
 		set filelength [llength $filename]
         	if {$filelength==0} {
                 	return
 	        }
-		$sel writepdb $filename
+		if {[catch {$sel writepdb $filename}]} {
+                        set msg "webpdb does not exist"
+                        tk_messageBox -title "File Error" -parent .textview -type ok -message $msg
+                        return
+                }
 	}
+	if {$is_empty==1} {
+		set id [lindex $molid $select_id]
+		if {[catch {set sel [atomselect $id $cmd]}]} {
+                        set msg "The atom selection you typed could not be understood"
+                        tk_messageBox -title "Selection Error" -parent .textview -type ok -message $msg
+                        return
+                }
+                set filename [::Molcontrl::savefile]
+                set filelength [llength $filename]
+                if {$filelength==0} {
+                        return
+                }
+		if {[catch {$sel writepdb $filename}]} {
+                        set msg "webpdb does not exist"
+                        tk_messageBox -title "File Error" -parent .textview -type ok -message $msg
+                        return
+                }
+	}
+
 	set f_end [open $filename a]
 	set ter "TER"
 	puts $f_end $ter
@@ -4294,7 +4948,13 @@ proc ::Molcontrl::save {} {
         }
 
 	set new_molid [molinfo list]
-        foreach val1 $select_files {
+	set refresh_select_files {}
+	foreach val $select_files {
+		set new_select_file [lindex $molid $val]
+		lappend refresh_select_files $new_select_file
+	}
+
+        foreach val1 $refresh_select_files {
 		set need_to_refresh 1
 		foreach val2 $new_molid {
 			if {$val1==$val2} {
@@ -4316,7 +4976,7 @@ proc ::Molcontrl::save {} {
 
 	foreach each_file $new_filelist {
                 set extension_name [file extension $each_file]
-                if {$extension_name!=".pdb"&&$extension_name!=".gro"&&$extension_name!=".mol2"} {
+                if {$extension_name!=".pdb"&&$extension_name!=".gro"&&$extension_name!=".mol2"&&$extension_name!=""} {
                         set is_support 0
                 }
         }
@@ -4352,7 +5012,7 @@ proc ::Molcontrl::save {} {
 
         #save new pdb files
         set filenumber 0
-        foreach val $select_files {
+        foreach val $refresh_select_files {
                 set sel [atomselect $val all]
 
                 set dir_name_pdb [lindex $new_filelist $filenumber]
@@ -4362,7 +5022,14 @@ proc ::Molcontrl::save {} {
                 set extension_name ".pdb"
                 set reference_name [format "%s/~$%s%d%s" $dir_name $paper_name $filenumber $extension_name]
 
-                $sel writepdb $reference_name
+		if {[catch {$sel writepdb $reference_name}]} {
+                        set msg "PDB file does not exist"
+                        tk_messageBox -title "PDB Error" -parent .textview -type ok -message $msg
+			foreach val $thesefile_new {
+				file delete $val
+			}
+                        return
+                }
 
                 incr filenumber
                 lappend thesefile_new $reference_name
@@ -4372,7 +5039,7 @@ proc ::Molcontrl::save {} {
         set cryst {}
         set crystal_max {}
         set crystal_min {}
-        foreach val $select_files {
+        foreach val $refresh_select_files {
                 set sel [atomselect $val all]
                 set crystal_min_max [measure minmax $sel]
                 lappend crystal_min [lindex $crystal_min_max 0]
@@ -4460,25 +5127,7 @@ proc ::Molcontrl::save {} {
         foreach val $new_filelist {
                 set is_which_file [file extension $val]
                 if {$is_which_file==".pdb"} {
-                        set f_crystal [open $val r]
-                        set row 0
-
-                        set atom_count 0
-
-                        while {[eof $f_crystal]!=1} {
-                                incr row
-                                gets $f_crystal line
-                                set sense_crystal [string first $find_cryst1 $line]
-                                if {$sense_crystal==0} {
-                                        lappend cryst $line
-                                }
-                                set sense_atom [string first $find_atom $line]
-                                if {$sense_atom==0} {
-                                        incr atom_count
-                                }
-                        }
-                        close $f_crystal
-                        lappend atom_number_list $atom_count
+                        lappend atom_number_list "pdb"
                 }
                 if {$is_which_file==".gro"} {
                         lappend atom_number_list "gro"
@@ -4542,16 +5191,11 @@ proc ::Molcontrl::save {} {
                 }
 
 		if {$number_limit!="gro"&&$number_limit!="mol2"} {
-                        set count 0
-                        while {[eof $fd]!=1} {
+			while {[eof $fd]!=1} {
                                 incr row
                                 gets $fd line
                                 set sense_atom [string first $find_atom $line]
                                 if {$sense_atom==0} {
-                                        incr count
-                                        if {$count>$number_limit} {
-                                                break
-                                        }
                                         set newline $line
                                         set atomnumber_next [format "%5d" $atom_number]
                                         set atom [string replace $newline 6 10 $atomnumber_next]
@@ -4588,19 +5232,6 @@ proc ::Molcontrl::these {} {
 	set atom_number_list {}
 	set is_support 1
 
-	foreach each_file $thesefile {
-		set extension_name [file extension $each_file]
-		if {$extension_name!=".pdb"&&$extension_name!=".gro"&&$extension_name!=".mol2"} {
-			set is_support 0
-		}
-	}
-
-	if {$is_support==0} {
-                set msg "You should use pdb/gro/mol2 files"
-                tk_messageBox -title "File type Error" -parent .textview -type ok -message $msg
-                return
-        }
-
         set filelength [llength $thesefile]
         if {$filelength==0} {
                 return
@@ -4633,6 +5264,19 @@ proc ::Molcontrl::these {} {
                 return
         }
 
+        foreach each_file $thesefile {
+                set extension_name [file extension $each_file]
+                if {$extension_name!=".pdb"&&$extension_name!=".gro"&&$extension_name!=".mol2"&&$extension_name!=""} {
+                        set is_support 0
+                }
+        }
+
+        if {$is_support==0} {
+                set msg "You should use pdb/gro/mol2 files"
+                tk_messageBox -title "File type Error" -parent .textview -type ok -message $msg
+                return
+        }
+
         set pdbfile [::Molcontrl::savefile]
 
         set judge [string equal $pdbfile ""]
@@ -4660,8 +5304,14 @@ proc ::Molcontrl::these {} {
 		set paper_name [file root $tail_name]
 		set extension_name ".pdb"
 	        set reference_name [format "%s/~$%s%d%s" $dir_name $paper_name $filenumber $extension_name]
-		
-		$sel writepdb $reference_name		
+		if {[catch {$sel writepdb $reference_name}]} {
+                        set msg "PDB file does not exist"
+                        tk_messageBox -title "PDB Error" -parent .textview -type ok -message $msg
+			foreach val $thesefile_new {
+                                file delete $val
+                        }
+                        return
+                }
 	
                 incr filenumber
                 lappend thesefile_new $reference_name
@@ -4759,25 +5409,7 @@ proc ::Molcontrl::these {} {
         foreach val $thesefile {
 		set is_which_file [file extension $val]
 		if {$is_which_file==".pdb"} {
-			set f_crystal [open $val r]
-			set row 0
-
-			set atom_count 0
-
-			while {[eof $f_crystal]!=1} {
-				incr row
-				gets $f_crystal line
-				set sense_crystal [string first $find_cryst1 $line]
-				if {$sense_crystal==0} {
-					lappend cryst $line
-				}
-				set sense_atom [string first $find_atom $line]
-				if {$sense_atom==0} {
-					incr atom_count
-				}
-			}       
-			close $f_crystal
-			lappend atom_number_list $atom_count
+			lappend atom_number_list "pdb"
 		}
 		if {$is_which_file==".gro"} {
 			lappend atom_number_list "gro"
@@ -4841,23 +5473,18 @@ proc ::Molcontrl::these {} {
 		}
 
 		if {$number_limit!="gro"&&$number_limit!="mol2"} {
-			set count 0
 			while {[eof $fd]!=1} {
-				incr row
-				gets $fd line
-				set sense_atom [string first $find_atom $line]
-				if {$sense_atom==0} {
-					incr count
-					if {$count>$number_limit} {
-						break
-					}
-					set newline $line
-					set atomnumber_next [format "%5d" $atom_number]
-					set atom [string replace $newline 6 10 $atomnumber_next]
-					puts $f $atom
-					incr atom_number
-				}
-			}
+                                incr row
+                                gets $fd line
+                                set sense_atom [string first $find_atom $line]
+                                if {$sense_atom==0} {
+                                        set newline $line
+                                        set atomnumber_next [format "%5d" $atom_number]
+                                        set atom [string replace $newline 6 10 $atomnumber_next]
+                                        puts $f $atom
+                                        incr atom_number
+                                }
+                        }
 			close $fd
 			incr index
 		}
@@ -4874,6 +5501,15 @@ proc ::Molcontrl::these {} {
 		file delete $val
 	}
 }
+proc ::Molcontrl::logfile {name1 name2 op} {
+	global vmd_logfile_channel
+	global vmd_logfile
+
+	if {[string equal $vmd_logfile_channel stdout]} {
+		vmdcon -info $vmd_logfile
+	}
+}
+trace variable vmd_logfile w ::Molcontrl::logfile 
 proc molcontroller_tk {} {
         ::Molcontrl::textview
         return $::Molcontrl::w
